@@ -32,31 +32,63 @@ export default function DashboardPage() {
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    // Simulate loading dashboard data
+    // Load real dashboard data
     const loadDashboardData = async () => {
       setIsLoading(true);
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data - in real app, this would come from API
-      setDashboardData({
-        totalAgents: 3,
-        activeCalls: 2,
-        totalCalls: 47,
-        systemStatus: 'Operational',
-        recentActivity: [
-          { type: 'call', message: 'New call received on Agent Alpha', time: '2 minutes ago', status: 'success' },
-          { type: 'agent', message: 'Agent Beta deployed successfully', time: '15 minutes ago', status: 'success' },
-          { type: 'call', message: 'Call completed on Agent Gamma', time: '1 hour ago', status: 'success' },
-          { type: 'system', message: 'System health check passed', time: '2 hours ago', status: 'info' }
-        ],
-        performanceMetrics: {
-          avgCallDuration: 4.2,
-          successRate: 94.5,
-          responseTime: 1.8
-        }
-      });
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Load agents data
+        const agentsResponse = await fetch('/api/agents', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        const agentsData = await agentsResponse.json();
+        
+        // Load calls data (when API is available)
+        // const callsResponse = await fetch('/api/calls', {
+        //   headers: {
+        //     'Authorization': `Bearer ${token}`,
+        //     'Content-Type': 'application/json',
+        //   },
+        // });
+        // const callsData = await callsResponse.json();
+        
+        const totalAgents = agentsData.agents?.length || 0;
+        const activeCalls = 0; // TODO: Implement when calls API is ready
+        const totalCalls = 0; // TODO: Implement when calls API is ready
+        
+        setDashboardData({
+          totalAgents,
+          activeCalls,
+          totalCalls,
+          systemStatus: 'Operational',
+          recentActivity: [],
+          performanceMetrics: {
+            avgCallDuration: 0,
+            successRate: 0,
+            responseTime: 0
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        setDashboardData({
+          totalAgents: 0,
+          activeCalls: 0,
+          totalCalls: 0,
+          systemStatus: 'Operational',
+          recentActivity: [],
+          performanceMetrics: {
+            avgCallDuration: 0,
+            successRate: 0,
+            responseTime: 0
+          }
+        });
+      }
       
       setIsLoading(false);
     };
