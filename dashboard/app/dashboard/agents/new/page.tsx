@@ -17,10 +17,13 @@ export default function NewAgentPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [webhookEndpoint, setWebhookEndpoint] = useState('');
+  const [agentInvocationUrl, setAgentInvocationUrl] = useState('');
+  const [s3BucketName, setS3BucketName] = useState('');
   const [availableNumbers, setAvailableNumbers] = useState<Array<{id: string, number: string, description?: string}>>([]);
 
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     knowledgeBase: '',
     prompt: '',
     guardrails: '',
@@ -30,7 +33,22 @@ export default function NewAgentPage() {
     summaryPhoneNumber: '',
     twilioAccountSid: '',
     twilioApiSecret: '',
-    voiceId: ''
+    voiceId: '',
+    // AWS Configuration
+    awsAccessKey: '',
+    awsSecretKey: '',
+    awsRegion: 'us-east-1',
+    // Additional Core Agent Fields
+    sipEndpoint: '',
+    novaPickupWebhookUrl: '',
+    transcriptWebhookUrl: '',
+    // Call Recording Settings
+    enableRecording: true,
+    enableTranscription: true,
+    // Guard Rails Configuration
+    maxConversationLength: '100',
+    maxSessionDuration: '900000', // 15 minutes in milliseconds
+    maxInappropriateAttempts: '5'
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -66,7 +84,8 @@ export default function NewAgentPage() {
   };
 
   const isFormValid = () => {
-    return Object.values(formData).every(value => value.trim() !== '');
+    const requiredFields = ['name', 'knowledgeBase', 'prompt', 'guardrails', 'callPhoneNumber', 'transferPhoneNumber', 'summaryPhoneNumber', 'twilioAccountSid', 'twilioApiSecret', 'voiceId'];
+    return requiredFields.every(field => formData[field as keyof typeof formData]?.toString().trim() !== '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,6 +115,8 @@ export default function NewAgentPage() {
       if (response.ok) {
         setSuccess('Agent created successfully!');
         setWebhookEndpoint(data.webhookEndpoint);
+        setAgentInvocationUrl(data.agentInvocationUrl);
+        setS3BucketName(data.s3BucketName);
       } else {
         setError(data.message || 'Failed to create agent');
       }
@@ -129,32 +150,82 @@ export default function NewAgentPage() {
           </Button>
         </div>
 
-        {/* Success Message with Webhook */}
+        {/* Success Message with URLs */}
         {success && webhookEndpoint && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center space-x-2 mb-2">
+            <div className="flex items-center space-x-2 mb-3">
               <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>
               </div>
-              <h3 className="text-lg font-semibold text-green-800">Agent Created Successfully!</h3>
+              <h3 className="text-lg font-semibold text-green-800">Agent Created & Deployed Successfully!</h3>
             </div>
-            <p className="text-green-700 mb-3">Your agent is now deployed and ready to receive calls.</p>
-            <div className="bg-white p-3 rounded border">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Webhook Endpoint:
-              </label>
-              <div className="flex items-center space-x-2">
-                <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono">
-                  {webhookEndpoint}
-                </code>
-                <Button
-                  size="sm"
-                  onClick={() => navigator.clipboard.writeText(webhookEndpoint)}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  Copy
-                </Button>
+            <p className="text-green-700 mb-4">Your agent is now running on AWS Fargate and ready to receive calls.</p>
+            
+            <div className="space-y-3">
+              {/* Agent Invocation URL for Twilio */}
+              <div className="bg-white p-3 rounded border">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  🎯 Agent Invocation URL (Add this to Twilio):
+                </label>
+                <div className="flex items-center space-x-2">
+                  <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono">
+                    {agentInvocationUrl || webhookEndpoint}
+                  </code>
+                  <Button
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(agentInvocationUrl || webhookEndpoint)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Copy
+                  </Button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configure this URL in your Twilio phone number's webhook settings
+                </p>
               </div>
+
+              {/* Webhook Endpoint */}
+              <div className="bg-white p-3 rounded border">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  🔗 Webhook Endpoint:
+                </label>
+                <div className="flex items-center space-x-2">
+                  <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono">
+                    {webhookEndpoint}
+                  </code>
+                  <Button
+                    size="sm"
+                    onClick={() => navigator.clipboard.writeText(webhookEndpoint)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+
+              {/* S3 Bucket for Transcripts */}
+              {s3BucketName && (
+                <div className="bg-white p-3 rounded border">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    📁 S3 Bucket for Transcripts:
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <code className="flex-1 bg-gray-100 px-3 py-2 rounded text-sm font-mono">
+                      {s3BucketName}
+                    </code>
+                    <Button
+                      size="sm"
+                      onClick={() => navigator.clipboard.writeText(s3BucketName)}
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Call transcripts and recordings will be stored in this bucket
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -195,6 +266,20 @@ export default function NewAgentPage() {
                   onChange={handleInputChange}
                   placeholder="Enter agent name (e.g., Customer Support Bot)"
                   required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Brief description of the agent's purpose..."
+                  rows={2}
                 />
               </div>
             </CardContent>
@@ -299,6 +384,67 @@ export default function NewAgentPage() {
             </CardContent>
           </Card>
 
+          {/* AWS Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-blue-500" />
+                <span>AWS Configuration</span>
+              </CardTitle>
+              <CardDescription>
+                AWS credentials and region for Nova Sonic integration
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label htmlFor="awsAccessKey" className="block text-sm font-medium text-gray-700 mb-2">
+                  AWS Access Key ID
+                </label>
+                <Input
+                  id="awsAccessKey"
+                  name="awsAccessKey"
+                  type="password"
+                  value={formData.awsAccessKey}
+                  onChange={handleInputChange}
+                  placeholder="AKIA..."
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="awsSecretKey" className="block text-sm font-medium text-gray-700 mb-2">
+                  AWS Secret Access Key
+                </label>
+                <Input
+                  id="awsSecretKey"
+                  name="awsSecretKey"
+                  type="password"
+                  value={formData.awsSecretKey}
+                  onChange={handleInputChange}
+                  placeholder="Enter AWS secret key"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="awsRegion" className="block text-sm font-medium text-gray-700 mb-2">
+                  AWS Region *
+                </label>
+                <select
+                  id="awsRegion"
+                  name="awsRegion"
+                  value={formData.awsRegion}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="us-east-1">US East (N. Virginia)</option>
+                  <option value="us-west-2">US West (Oregon)</option>
+                  <option value="eu-west-1">Europe (Ireland)</option>
+                  <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Integration Settings */}
           <Card>
             <CardHeader>
@@ -323,6 +469,120 @@ export default function NewAgentPage() {
                   placeholder="https://hook.eu1.make.com/..."
                   required
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-blue-500" />
+                <span>Advanced Configuration</span>
+              </CardTitle>
+              <CardDescription>
+                Additional settings for call handling and webhooks
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label htmlFor="sipEndpoint" className="block text-sm font-medium text-gray-700 mb-2">
+                  SIP Endpoint (Optional)
+                </label>
+                <Input
+                  id="sipEndpoint"
+                  name="sipEndpoint"
+                  value={formData.sipEndpoint}
+                  onChange={handleInputChange}
+                  placeholder="username@domain.sip.twilio.com"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  For human agent transfers via SIP
+                </p>
+              </div>
+              
+              <div>
+                <label htmlFor="novaPickupWebhookUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nova Pickup Webhook URL (Optional)
+                </label>
+                <Input
+                  id="novaPickupWebhookUrl"
+                  name="novaPickupWebhookUrl"
+                  value={formData.novaPickupWebhookUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://your-webhook-url.com/nova-pickup"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Webhook triggered when Nova picks up the call
+                </p>
+              </div>
+              
+              <div>
+                <label htmlFor="transcriptWebhookUrl" className="block text-sm font-medium text-gray-700 mb-2">
+                  Transcript Webhook URL (Optional)
+                </label>
+                <Input
+                  id="transcriptWebhookUrl"
+                  name="transcriptWebhookUrl"
+                  value={formData.transcriptWebhookUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://your-webhook-url.com/transcript"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Webhook for receiving call transcripts
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max Conversation Length
+                  </label>
+                  <Input
+                    name="maxConversationLength"
+                    type="number"
+                    value={formData.maxConversationLength}
+                    onChange={handleInputChange}
+                    placeholder="100"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Max Session Duration (ms)
+                  </label>
+                  <Input
+                    name="maxSessionDuration"
+                    type="number"
+                    value={formData.maxSessionDuration}
+                    onChange={handleInputChange}
+                    placeholder="900000"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="enableRecording"
+                    checked={formData.enableRecording}
+                    onChange={(e) => setFormData(prev => ({ ...prev, enableRecording: e.target.checked }))}
+                    className="mr-2"
+                  />
+                  Enable Call Recording
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="enableTranscription"
+                    checked={formData.enableTranscription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, enableTranscription: e.target.checked }))}
+                    className="mr-2"
+                  />
+                  Enable Transcription
+                </label>
               </div>
             </CardContent>
           </Card>
