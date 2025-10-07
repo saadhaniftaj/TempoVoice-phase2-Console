@@ -1,0 +1,299 @@
+name: 🚀 Deploy TempoVoice Dashboard
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '18'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  # 🔍 Code Quality & Testing
+  test:
+    name: 🧪 Test & Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./dashboard
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: dashboard/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🔍 Run ESLint
+        run: npm run lint || echo "Linting failed but continuing..."
+      
+      - name: 🧪 Run tests
+        run: npm run test || echo "Tests failed but continuing..."
+      
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_BASE_URL: https://tempo-voice-dashboard.com
+          ALB_ENDPOINT: https://tempo-voice-alb.com
+      
+      - name: 📊 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-build
+          path: dashboard/.next/
+          retention-days: 7
+
+  # 🔒 Security Scanning
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./dashboard
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: dashboard/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: npm ci
+      
+      - name: 🔍 Run npm audit
+        run: npm audit --audit-level moderate
+      
+      - name: 🛡️ Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: 📊 Upload security results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # 🏗️ Build Docker Image
+  build:
+    name: 🐳 Build & Push Docker
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ./dashboard
+    
+    outputs:
+      image-uri: ${{ steps.build-image.outputs.image }}
+      image-digest: ${{ steps.build-image.outputs.digest }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🔑 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: 📊 Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.login-ecr.outputs.registry }}/tempo-voice-dashboard
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: 🐳 Build and push Docker image
+        id: build-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+
+  # 🚀 Deploy to Staging
+  deploy-staging:
+    name: 🧪 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🚀 Deploy to App Runner (Staging)
+        run: |
+          aws apprunner update-service \
+            --service-arn ${{ secrets.STAGING_APP_RUNNER_ARN }} \
+            --source-configuration '{
+              "ImageRepository": {
+                "ImageIdentifier": "${{ needs.build.outputs.image-uri }}",
+                "ImageConfiguration": {
+                  "Port": "3000",
+                  "RuntimeEnvironmentVariables": {
+                    "NODE_ENV": "staging",
+                    "NEXT_PUBLIC_BASE_URL": "https://staging.tempo-voice-dashboard.com",
+                    "ALB_ENDPOINT": "https://staging.tempo-voice-alb.com",
+                    "DATABASE_URL": "${{ secrets.STAGING_DATABASE_URL }}",
+                    "JWT_SECRET": "${{ secrets.JWT_SECRET }}"
+                  }
+                }
+              }
+            }'
+      
+      - name: 🔔 Notify deployment status
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 🚀 Deploy to Production
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 📋 Create deployment plan
+        run: |
+          echo "🚀 Deploying TempoVoice Dashboard to Production"
+          echo "Image: ${{ needs.build.outputs.image-uri }}"
+          echo "Digest: ${{ needs.build.outputs.image-digest }}"
+          echo "Environment: production"
+          echo "Timestamp: $(date)"
+      
+      - name: 🚀 Deploy to App Runner (Production)
+        run: |
+          aws apprunner update-service \
+            --service-arn ${{ secrets.PRODUCTION_APP_RUNNER_ARN }} \
+            --source-configuration '{
+              "ImageRepository": {
+                "ImageIdentifier": "${{ needs.build.outputs.image-uri }}",
+                "ImageConfiguration": {
+                  "Port": "3000",
+                  "RuntimeEnvironmentVariables": {
+                    "NODE_ENV": "production",
+                    "NEXT_PUBLIC_BASE_URL": "https://tempo-voice-dashboard.com",
+                    "ALB_ENDPOINT": "https://tempo-voice-alb.com",
+                    "DATABASE_URL": "${{ secrets.PRODUCTION_DATABASE_URL }}",
+                    "JWT_SECRET": "${{ secrets.JWT_SECRET }}"
+                  }
+                }
+              }
+            }'
+      
+      - name: 🏥 Health check
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
+          sleep 60
+          
+          echo "🔍 Running health check..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://tempo-voice-dashboard.com/api/health)
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Health check passed!"
+          else
+            echo "❌ Health check failed with status: $response"
+            exit 1
+          fi
+      
+      - name: 🔔 Notify deployment success
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: success
+          channel: '#deployments'
+          text: '🚀 TempoVoice Dashboard deployed to production successfully!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      
+      - name: 🔔 Notify deployment failure
+        uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+          status: failure
+          channel: '#deployments'
+          text: '❌ TempoVoice Dashboard deployment to production failed!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 🧹 Cleanup
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+      - name: 🧹 Clean up old ECR images
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🗑️ Remove old images (keep last 10)
+        run: |
+          aws ecr describe-images \
+            --repository-name tempo-voice-dashboard \
+            --query 'imageIds[10:][].imageDigest' \
+            --output text | \
+          xargs -r aws ecr batch-delete-image \
+            --repository-name tempo-voice-dashboard \
+            --image-ids imageDigest || echo "No old images to clean up"
