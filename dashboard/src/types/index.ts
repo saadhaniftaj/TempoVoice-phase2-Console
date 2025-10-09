@@ -2,7 +2,7 @@ export interface User {
   id: string;
   email: string;
   role: 'ADMIN' | 'DEVELOPER';
-  tenantId?: string;
+  tenantId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

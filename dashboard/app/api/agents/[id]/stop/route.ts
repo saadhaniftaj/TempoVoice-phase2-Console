@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, AgentStatus } from '../../../../../generated/prisma/index';
-import { AuthService } from '../../../../../../src/lib/auth';
+import { PrismaClient, AgentStatus } from '../../../../generated/prisma/index';
+import { AuthService } from '../../../../../src/lib/auth';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -22,7 +23,7 @@ export async function POST(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const agentId = params.id;
+    const { id: agentId } = await params;
 
     // Check if agent exists and belongs to user's tenant
     const agent = await prisma.agent.findFirst({
@@ -39,16 +40,19 @@ export async function POST(
       );
     }
 
-    // Update agent status to DRAFT (stopped)
-    await prisma.agent.update({
-      where: { id: agentId },
-      data: {
-        status: AgentStatus.DRAFT
-      }
+    // Invoke stop on deployment Lambda
+    const lambda = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
+    const functionName = process.env.DEPLOY_AGENT_LAMBDA || 'DeployTempoVoiceAgent';
+    const payload = { action: 'stop', agentId };
+    const invoke = new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: 'RequestResponse',
+      Payload: Buffer.from(JSON.stringify(payload))
     });
+    await lambda.send(invoke);
 
-    // TODO: Here you would also stop the actual Fargate container
-    // This would involve calling AWS APIs to stop the running container
+    // Mark agent as DRAFT (stopped)
+    await prisma.agent.update({ where: { id: agentId }, data: { status: AgentStatus.DRAFT } });
 
     return NextResponse.json({
       message: 'Agent stopped successfully'

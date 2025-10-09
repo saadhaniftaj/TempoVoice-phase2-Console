@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, AgentStatus } from '../../../../../generated/prisma/index';
-import { AuthService } from '../../../../../../src/lib/auth';
+import { PrismaClient, AgentStatus } from '../../../../generated/prisma/index';
+import { AuthService } from '../../../../../src/lib/auth';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 const prisma = new PrismaClient();
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -22,7 +23,7 @@ export async function POST(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const agentId = params.id;
+    const { id: agentId } = await params;
 
     // Check if agent exists and belongs to user's tenant
     const agent = await prisma.agent.findFirst({
@@ -42,27 +43,63 @@ export async function POST(
     // Update agent status to DEPLOYING
     await prisma.agent.update({
       where: { id: agentId },
+      data: { status: AgentStatus.DEPLOYING }
+    });
+
+    // Invoke deployment Lambda
+    const lambda = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
+    const functionName = process.env.DEPLOY_AGENT_LAMBDA || 'DeployTempoVoiceAgent';
+    const payload = {
+      action: 'deploy',
+      agentId,
+      tenantId: user.tenantId,
+      config: {
+        name: agent.name,
+        prompt: agent.prompt,
+        guardrails: agent.guardrails,
+        knowledgeBase: agent.knowledgeBase,
+        callPhoneNumber: agent.callPhoneNumber,
+        transferPhoneNumber: agent.transferPhoneNumber,
+        summaryPhoneNumber: agent.summaryPhoneNumber,
+        twilioAccountSid: agent.twilioAccountSid,
+        twilioApiSecret: agent.twilioApiSecret,
+        voiceId: agent.voiceId,
+      }
+    };
+
+    const invoke = new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: 'RequestResponse',
+      Payload: Buffer.from(JSON.stringify(payload))
+    });
+
+    const result = await lambda.send(invoke);
+    const responseString = result.Payload ? Buffer.from(result.Payload).toString('utf-8') : '{}';
+    const responseJson = JSON.parse(responseString || '{}') as { serviceUrl?: string; webhookUrl?: string; error?: string };
+
+    if (responseJson.error) {
+      await prisma.agent.update({ where: { id: agentId }, data: { status: AgentStatus.ERROR } });
+      return NextResponse.json({ message: 'Deployment failed', error: responseJson.error }, { status: 500 });
+    }
+
+    const serviceUrl = responseJson.webhookUrl || responseJson.serviceUrl;
+
+    // Persist webhook endpoint and activate agent
+    await prisma.agent.update({
+      where: { id: agentId },
       data: {
-        status: AgentStatus.DEPLOYING
+        status: AgentStatus.ACTIVE,
+        webhookEndpoint: serviceUrl || null,
       }
     });
 
-    // TODO: Here you would trigger the Lambda function to deploy the agent
-    // This would involve:
-    // 1. Creating S3 bucket for transcripts
-    // 2. Deploying Fargate container with agent configuration
-    // 3. Configuring Twilio webhook for the callPhoneNumber to point to agent.webhookEndpoint
-    // 4. Once deployment is complete, update status to ACTIVE
-
-    // For now, simulate deployment success
-    setTimeout(async () => {
-      await prisma.agent.update({
-        where: { id: agentId },
-        data: {
-          status: AgentStatus.ACTIVE
-        }
+    // Update phone number mapping with webhook URL
+    if (serviceUrl && agent.callPhoneNumber) {
+      await prisma.phoneNumber.updateMany({
+        where: { number: agent.callPhoneNumber },
+        data: { webhookUrl: serviceUrl }
       });
-    }, 5000);
+    }
 
     return NextResponse.json({
       message: 'Agent deployment started'

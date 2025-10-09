@@ -5,7 +5,7 @@ const authService = new AuthService();
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, role, tenantId } = await request.json();
+    const { email, password, role, tenantId } = await request.json() as { email?: string; password?: string; role?: 'ADMIN' | 'DEVELOPER'; tenantId?: string };
 
     if (!email || !password || !role) {
       return NextResponse.json(
@@ -24,10 +24,14 @@ export async function POST(request: NextRequest) {
     const result = await authService.register(email, password, role, tenantId);
 
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Registration error:', error);
-    
-    if (error.code === 'P2002') {
+
+    const hasCode = (e: unknown): e is { code: string } => {
+      return typeof (e as { code?: unknown }).code === 'string';
+    };
+
+    if (hasCode(error) && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Email already exists' },
         { status: 409 }

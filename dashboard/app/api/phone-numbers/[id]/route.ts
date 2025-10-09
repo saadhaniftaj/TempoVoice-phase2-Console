@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -22,7 +22,7 @@ export async function DELETE(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const phoneNumberId = params.id;
+    const { id: phoneNumberId } = await params;
 
     // Check if phone number exists
     const phoneNumber = await prisma.phoneNumber.findUnique({

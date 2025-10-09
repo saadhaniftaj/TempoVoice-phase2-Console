@@ -21,17 +21,17 @@ export class AuthService {
         id: user.id, 
         email: user.email, 
         role: user.role,
-        tenantId: user.tenantId 
+        tenantId: user.tenantId ?? undefined,
       },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
   }
 
-  verifyToken(token: string): any {
+  verifyToken(token: string): { id: string; email: string; role: 'ADMIN' | 'DEVELOPER'; tenantId?: string } | null {
     try {
-      return jwt.verify(token, JWT_SECRET);
-    } catch (error) {
+      return jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: 'ADMIN' | 'DEVELOPER'; tenantId?: string };
+    } catch {
       return null;
     }
   }
@@ -50,8 +50,8 @@ export class AuthService {
       return null;
     }
 
-    const token = this.generateToken(user);
-    return { user, token };
+    const token = this.generateToken(user as unknown as User);
+    return { user: user as unknown as User, token };
   }
 
   async register(email: string, password: string, role: 'ADMIN' | 'DEVELOPER', tenantId?: string): Promise<{ user: User; token: string }> {
@@ -62,18 +62,18 @@ export class AuthService {
         email,
         passwordHash,
         role,
-        tenantId
+        tenantId: tenantId ?? null,
       }
     });
 
-    const token = this.generateToken(user);
-    return { user, token };
+    const token = this.generateToken(user as unknown as User);
+    return { user: user as unknown as User, token };
   }
 
   async getUserById(id: string): Promise<User | null> {
     const user = await prisma.user.findUnique({
       where: { id }
     });
-    return user;
+    return user as unknown as User;
   }
 }

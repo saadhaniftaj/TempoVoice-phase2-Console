@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../generated/prisma/index';
+import { PrismaClient, Prisma } from '../../generated/prisma/index';
 import { AuthService } from '../../../src/lib/auth';
 
 const prisma = new PrismaClient();
@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       name,
-      description,
       knowledgeBase,
       prompt,
       guardrails,
@@ -77,18 +76,7 @@ export async function POST(request: NextRequest) {
       summaryPhoneNumber,
       twilioAccountSid,
       twilioApiSecret,
-      voiceId,
-      awsAccessKey,
-      awsSecretKey,
-      awsRegion,
-      sipEndpoint,
-      novaPickupWebhookUrl,
-      transcriptWebhookUrl,
-      enableRecording,
-      enableTranscription,
-      maxConversationLength,
-      maxSessionDuration,
-      maxInappropriateAttempts
+      voiceId
     } = body;
 
     // Validate required fields
@@ -116,21 +104,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique agent ID and URLs
-    const agentId = `agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const webhookEndpoint = `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/${agentId}/webhook`;
-    const agentInvocationUrl = `${process.env.ALB_ENDPOINT || 'https://your-alb-endpoint.com'}/agent/${agentId}/incoming-call`;
-    const s3BucketName = `tempo-agent-transcripts-${agentId}`;
-
-    // Create S3 bucket for transcripts (simulated - in real implementation, this would be done by Lambda)
-    console.log(`Creating S3 bucket: ${s3BucketName}`);
+    // Generate webhook endpoint
+    const webhookEndpoint = `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/${name.toLowerCase().replace(/\s+/g, '-')}/webhook`;
 
     // Create the agent
     const agent = await prisma.agent.create({
       data: {
-        id: agentId,
         name,
-        description: description || '',
         knowledgeBase,
         prompt,
         guardrails,
@@ -142,23 +122,11 @@ export async function POST(request: NextRequest) {
         twilioApiSecret,
         voiceId,
         webhookEndpoint,
+        // required json column
+        config: {} as Prisma.JsonObject,
         tenantId: user.tenantId || 'default',
         createdBy: user.id,
-        status: 'PENDING',
-        config: {
-          awsAccessKey,
-          awsSecretKey,
-          awsRegion,
-          sipEndpoint,
-          novaPickupWebhookUrl,
-          transcriptWebhookUrl,
-          enableRecording,
-          enableTranscription,
-          maxConversationLength: parseInt(maxConversationLength),
-          maxSessionDuration: parseInt(maxSessionDuration),
-          maxInappropriateAttempts: parseInt(maxInappropriateAttempts),
-          s3BucketName
-        }
+        status: 'PENDING'
       }
     });
 
@@ -178,9 +146,7 @@ export async function POST(request: NextRequest) {
         id: agent.id,
         name: agent.name,
         status: agent.status,
-        webhookEndpoint: agent.webhookEndpoint,
-        agentInvocationUrl,
-        s3BucketName
+        webhookEndpoint: agent.webhookEndpoint
       }
     });
 

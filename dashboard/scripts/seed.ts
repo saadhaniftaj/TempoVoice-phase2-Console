@@ -34,7 +34,6 @@ async function main() {
 
   // Create some sample phone numbers for testing
   await prisma.phoneNumber.createMany({
-    skipDuplicates: true,
     data: [
       {
         number: '+1-555-0124',

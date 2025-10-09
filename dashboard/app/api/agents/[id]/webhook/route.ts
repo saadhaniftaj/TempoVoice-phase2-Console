@@ -3,9 +3,9 @@ import { PrismaClient } from '../../../../generated/prisma/index';
 
 const prisma = new PrismaClient();
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const agentId = params.id;
+    const { id: agentId } = await params;
     
     // Get agent configuration
     const agent = await prisma.agent.findUnique({

@@ -8,10 +8,30 @@ import { Bot, Phone, BarChart3, Users, Activity, TrendingUp, Clock, CheckCircle,
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+type ActivityItem = {
+  type: 'call' | 'agent' | 'system';
+  message: string;
+  time: string;
+  status: 'success' | 'error' | 'info';
+};
+
+type DashboardData = {
+  totalAgents: number;
+  activeCalls: number;
+  totalCalls: number;
+  systemStatus: string;
+  recentActivity: ActivityItem[];
+  performanceMetrics: {
+    avgCallDuration: number;
+    successRate: number;
+    responseTime: number;
+  };
+};
+
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState({
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
     totalAgents: 0,
     activeCalls: 0,
     totalCalls: 0,

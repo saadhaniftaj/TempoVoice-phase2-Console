@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, AgentStatus } from '../../../../generated/prisma/index';
-import { AuthService } from '../../../../../src/lib/auth';
+import { PrismaClient, AgentStatus } from '../../../generated/prisma/index';
+import { AuthService } from '../../../../src/lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verify authentication
@@ -22,7 +22,7 @@ export async function DELETE(
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const agentId = params.id;
+    const { id: agentId } = await params;
 
     // Check if agent exists and belongs to user's tenant
     const agent = await prisma.agent.findFirst({
