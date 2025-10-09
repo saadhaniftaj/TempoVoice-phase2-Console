@@ -4,7 +4,10 @@ import { PrismaClient } from '../../app/generated/prisma';
 import { User } from '../types';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+function getJWTSecret(): string {
+  return process.env.JWT_SECRET || 'your-secret-key';
+}
 
 export class AuthService {
   async hashPassword(password: string): Promise<string> {
@@ -23,14 +26,14 @@ export class AuthService {
         role: user.role,
         tenantId: user.tenantId ?? undefined,
       },
-      JWT_SECRET,
+      getJWTSecret(),
       { expiresIn: '7d' }
     );
   }
 
   verifyToken(token: string): { id: string; email: string; role: 'ADMIN' | 'DEVELOPER'; tenantId?: string } | null {
     try {
-      return jwt.verify(token, JWT_SECRET) as { id: string; email: string; role: 'ADMIN' | 'DEVELOPER'; tenantId?: string };
+      return jwt.verify(token, getJWTSecret()) as { id: string; email: string; role: 'ADMIN' | 'DEVELOPER'; tenantId?: string };
     } catch {
       return null;
     }
