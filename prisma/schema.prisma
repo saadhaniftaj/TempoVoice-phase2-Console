@@ -1,0 +1,95 @@
+// Prisma schema for Tempo Voice Dashboard (local dev)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  tenantId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdAgents Agent[] @relation("CreatedBy")
+}
+
+model Agent {
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  tenantId              String
+  phoneNumber           String?
+  voiceId               String?
+  status                AgentStatus @default(DRAFT)
+  config                Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Agent Configuration Fields
+  knowledgeBase         String
+  prompt                String
+  guardrails            String
+  makeEndpoint          String
+  callPhoneNumber       String
+  transferPhoneNumber   String
+  summaryPhoneNumber    String
+  twilioAccountSid      String
+  twilioApiSecret       String
+  webhookEndpoint       String?
+  
+  // Relations
+  createdBy             String?
+  createdByUser         User?     @relation("CreatedBy", fields: [createdBy], references: [id])
+  calls                 Call[]
+  phoneNumbers          PhoneNumber[]
+}
+
+model Call {
+  id            String   @id @default(cuid())
+  agentId       String
+  callSid       String?
+  fromNumber    String?
+  toNumber      String?
+  durationSec   Int?
+  status        String?
+  transcript    String?
+  recordingUrl  String?
+  createdAt     DateTime @default(now())
+
+  agent         Agent    @relation(fields: [agentId], references: [id])
+}
+
+model PhoneNumber {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  description String?
+  isAvailable Boolean  @default(true)
+  agentId     String?
+  webhookUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  DEVELOPER
+}
+
+enum AgentStatus {
+  DRAFT
+  PENDING
+  DEPLOYING
+  ACTIVE
+  ERROR
+}
