@@ -220,8 +220,7 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.16.2",
@@ -230,7 +229,6 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
@@ -239,8 +237,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// Prisma schema for Tempo Voice Dashboard (local dev)\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../app/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel User {\n  id           String   @id @default(cuid())\n  email        String   @unique\n  passwordHash String\n  role         Role\n  tenantId     String?\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n\n  createdAgents Agent[] @relation(\"CreatedBy\")\n}\n\nmodel Agent {\n  id          String      @id @default(cuid())\n  name        String\n  description String?\n  tenantId    String\n  phoneNumber String?\n  voiceId     String?\n  status      AgentStatus @default(DRAFT)\n  config      Json\n  createdAt   DateTime    @default(now())\n  updatedAt   DateTime    @updatedAt\n\n  // Agent Configuration Fields\n  knowledgeBase       String\n  prompt              String\n  guardrails          String\n  makeEndpoint        String\n  callPhoneNumber     String\n  transferPhoneNumber String\n  summaryPhoneNumber  String\n  twilioAccountSid    String\n  twilioApiSecret     String\n  twilioApiSid        String\n  webhookEndpoint     String?\n\n  // Relations\n  createdBy     String?\n  createdByUser User?         @relation(\"CreatedBy\", fields: [createdBy], references: [id])\n  calls         Call[]\n  phoneNumbers  PhoneNumber[]\n}\n\nmodel Call {\n  id           String   @id @default(cuid())\n  agentId      String\n  callSid      String?\n  fromNumber   String?\n  toNumber     String?\n  durationSec  Int?\n  status       String?\n  transcript   String?\n  recordingUrl String?\n  createdAt    DateTime @default(now())\n\n  agent Agent @relation(fields: [agentId], references: [id])\n}\n\nmodel PhoneNumber {\n  id          String   @id @default(cuid())\n  number      String   @unique\n  description String?\n  isAvailable Boolean  @default(true)\n  agentId     String?\n  webhookUrl  String?\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  agent Agent? @relation(fields: [agentId], references: [id])\n}\n\nenum Role {\n  ADMIN\n  DEVELOPER\n}\n\nenum AgentStatus {\n  DRAFT\n  PENDING\n  DEPLOYING\n  ACTIVE\n  ERROR\n}\n",
-  "inlineSchemaHash": "dbb7eaa7ce136c96acd8e41082e62b7930c7d69be47deb592877a236b6b58478",
+  "inlineSchema": "// Prisma schema for Tempo Voice Dashboard (local dev)\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../app/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel User {\n  id           String   @id @default(cuid())\n  email        String   @unique\n  passwordHash String\n  role         Role\n  tenantId     String?\n  createdAt    DateTime @default(now())\n  updatedAt    DateTime @updatedAt\n\n  createdAgents Agent[] @relation(\"CreatedBy\")\n}\n\nmodel Agent {\n  id          String      @id @default(cuid())\n  name        String\n  description String?\n  tenantId    String\n  phoneNumber String?\n  voiceId     String?\n  status      AgentStatus @default(DRAFT)\n  config      Json\n  createdAt   DateTime    @default(now())\n  updatedAt   DateTime    @updatedAt\n\n  // Agent Configuration Fields\n  knowledgeBase       String\n  prompt              String\n  guardrails          String\n  makeEndpoint        String\n  callPhoneNumber     String\n  transferPhoneNumber String\n  summaryPhoneNumber  String\n  twilioAccountSid    String\n  twilioApiSecret     String\n  twilioApiSid        String  @default(\"\")\n  webhookEndpoint     String?\n\n  // Relations\n  createdBy     String?\n  createdByUser User?         @relation(\"CreatedBy\", fields: [createdBy], references: [id])\n  calls         Call[]\n  phoneNumbers  PhoneNumber[]\n}\n\nmodel Call {\n  id           String   @id @default(cuid())\n  agentId      String\n  callSid      String?\n  fromNumber   String?\n  toNumber     String?\n  durationSec  Int?\n  status       String?\n  transcript   String?\n  recordingUrl String?\n  createdAt    DateTime @default(now())\n\n  agent Agent @relation(fields: [agentId], references: [id])\n}\n\nmodel PhoneNumber {\n  id          String   @id @default(cuid())\n  number      String   @unique\n  description String?\n  isAvailable Boolean  @default(true)\n  agentId     String?\n  webhookUrl  String?\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  agent Agent? @relation(fields: [agentId], references: [id])\n}\n\nenum Role {\n  ADMIN\n  DEVELOPER\n}\n\nenum AgentStatus {\n  DRAFT\n  PENDING\n  DEPLOYING\n  ACTIVE\n  ERROR\n}\n",
+  "inlineSchemaHash": "39c69e9d137f99755a528c33f2106a5ea44948a31254e1c73016b7606f167af4",
   "copyEngine": true
 }
 config.dirname = '/'

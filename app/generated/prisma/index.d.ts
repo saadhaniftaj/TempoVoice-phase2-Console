@@ -6598,7 +6598,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdByUser?: UserCreateNestedOneWithoutCreatedAgentsInput
     calls?: CallCreateNestedManyWithoutAgentInput
@@ -6625,7 +6625,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdBy?: string | null
     calls?: CallUncheckedCreateNestedManyWithoutAgentInput
@@ -6706,7 +6706,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdBy?: string | null
   }
@@ -7784,7 +7784,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     calls?: CallCreateNestedManyWithoutAgentInput
     phoneNumbers?: PhoneNumberCreateNestedManyWithoutAgentInput
@@ -7810,7 +7810,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     calls?: CallUncheckedCreateNestedManyWithoutAgentInput
     phoneNumbers?: PhoneNumberUncheckedCreateNestedManyWithoutAgentInput
@@ -8069,7 +8069,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdByUser?: UserCreateNestedOneWithoutCreatedAgentsInput
     phoneNumbers?: PhoneNumberCreateNestedManyWithoutAgentInput
@@ -8095,7 +8095,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdBy?: string | null
     phoneNumbers?: PhoneNumberUncheckedCreateNestedManyWithoutAgentInput
@@ -8189,7 +8189,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdByUser?: UserCreateNestedOneWithoutCreatedAgentsInput
     calls?: CallCreateNestedManyWithoutAgentInput
@@ -8215,7 +8215,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
     createdBy?: string | null
     calls?: CallUncheckedCreateNestedManyWithoutAgentInput
@@ -8309,7 +8309,7 @@ export namespace Prisma {
     summaryPhoneNumber: string
     twilioAccountSid: string
     twilioApiSecret: string
-    twilioApiSid: string
+    twilioApiSid?: string
     webhookEndpoint?: string | null
   }
 

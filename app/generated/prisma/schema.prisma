@@ -44,7 +44,7 @@ model Agent {
   summaryPhoneNumber  String
   twilioAccountSid    String
   twilioApiSecret     String
-  twilioApiSid        String
+  twilioApiSid        String  @default("")
   webhookEndpoint     String?
 
   // Relations
