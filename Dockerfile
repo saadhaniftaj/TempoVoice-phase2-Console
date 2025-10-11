@@ -25,8 +25,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-EXPOSE 3000
+# Don't set PORT here - let Railway set it
+EXPOSE 8080
 
 # Copy necessary files
 COPY package*.json ./
@@ -36,8 +36,12 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/app/generated/prisma ./app/generated/prisma
 COPY --from=builder /app/prisma ./prisma
+COPY start.sh ./start.sh
 
 # Create data directory for SQLite (fallback)
 RUN mkdir -p /app/data
 
-CMD ["npm", "run", "start"]
+# Make startup script executable
+RUN chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]
