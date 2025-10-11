@@ -36,12 +36,19 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/app/generated/prisma ./app/generated/prisma
 COPY --from=builder /app/prisma ./prisma
-COPY start.sh ./start.sh
 
-# Create data directory for SQLite (fallback)
+# Create data directory
 RUN mkdir -p /app/data
 
-# Make startup script executable
-RUN chmod +x /app/start.sh
+# Create entrypoint script
+RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
+    echo 'echo "🚀 Starting TempoVoice Dashboard..."' >> /app/entrypoint.sh && \
+    echo 'echo "📊 Running database migration..."' >> /app/entrypoint.sh && \
+    echo 'npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "⚠️ Migration failed"' >> /app/entrypoint.sh && \
+    echo 'echo "👤 Creating admin user if needed..."' >> /app/entrypoint.sh && \
+    echo 'node -e "const { PrismaClient } = require(\"./app/generated/prisma\"); const bcrypt = require(\"bcryptjs\"); (async () => { const p = new PrismaClient(); try { const e = await p.user.findFirst({ where: { email: \"admin@tempovoice.com\" } }); if (!e) { await p.user.create({ data: { email: \"admin@tempovoice.com\", passwordHash: await bcrypt.hash(\"admin123\", 10), role: \"ADMIN\", tenantId: \"default\" } }); console.log(\"✅ Admin created\"); } else { console.log(\"✅ Admin exists\"); } } catch (err) { console.log(\"⚠️ Admin setup failed:\", err.message); } finally { await p.\\$disconnect(); } })();" 2>&1 || echo "⚠️ Admin setup failed"' >> /app/entrypoint.sh && \
+    echo 'echo "🎯 Starting Next.js..."' >> /app/entrypoint.sh && \
+    echo 'exec npm run start' >> /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
 
-CMD ["/app/start.sh"]
+CMD ["/app/entrypoint.sh"]
