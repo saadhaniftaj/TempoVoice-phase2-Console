@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build --turbopack",
-    "start": "node migrate-db.js && next start",
+    "start": "node railway-migrate.js && next start",
     "start:railway": "./scripts/start.sh",
     "lint": "eslint",
     "seed": "tsx scripts/clean-seed.ts",

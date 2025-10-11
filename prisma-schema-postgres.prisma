@@ -1,0 +1,109 @@
+// Temporary Prisma schema for Railway PostgreSQL migration
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         Role
+  tenantId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdAgents Agent[] @relation("CreatedBy")
+
+  @@map("User")
+}
+
+model Agent {
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  tenantId              String
+  phoneNumber           String?
+  voiceId               String?
+  status                AgentStatus @default(DRAFT)
+  config                Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Agent Configuration Fields
+  knowledgeBase         String
+  prompt                String
+  guardrails            String
+  makeEndpoint          String
+  callPhoneNumber       String
+  transferPhoneNumber   String
+  summaryPhoneNumber    String
+  twilioAccountSid      String
+  twilioApiSecret       String
+  twilioApiSid          String @default("")
+  webhookEndpoint       String?
+  
+  // Relations
+  createdBy             String?
+  createdByUser         User?     @relation("CreatedBy", fields: [createdBy], references: [id])
+  calls                 Call[]
+  phoneNumbers          PhoneNumber[]
+
+  @@map("Agent")
+}
+
+model Call {
+  id          String   @id @default(cuid())
+  agentId     String
+  phoneNumber String
+  duration    Int?
+  status      CallStatus @default(INITIATED)
+  transcript  String?
+  recording   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("Call")
+}
+
+model PhoneNumber {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  agentId     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  agent Agent @relation(fields: [agentId], references: [id])
+
+  @@map("PhoneNumber")
+}
+
+enum Role {
+  ADMIN
+  DEVELOPER
+}
+
+enum AgentStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  INACTIVE
+  ERROR
+}
+
+enum CallStatus {
+  INITIATED
+  RINGING
+  ANSWERED
+  COMPLETED
+  FAILED
+}
