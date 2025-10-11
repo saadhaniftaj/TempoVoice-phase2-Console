@@ -77,13 +77,14 @@ export async function POST(request: NextRequest) {
       summaryPhoneNumber,
       twilioAccountSid,
       twilioApiSecret,
+      twilioApiSid,
       voiceId
     } = body;
 
     // Validate required fields
     if (!name || !knowledgeBase || !prompt || !guardrails || !makeEndpoint || 
         !callPhoneNumber || !transferPhoneNumber || !summaryPhoneNumber || 
-        !twilioAccountSid || !twilioApiSecret || !voiceId) {
+        !twilioAccountSid || !twilioApiSecret || !twilioApiSid || !voiceId) {
       return NextResponse.json(
         { message: 'All fields are required' },
         { status: 400 }
