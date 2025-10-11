@@ -55,7 +55,11 @@ async function railwayMigrate() {
   } catch (error) {
     console.error('❌ Railway migration failed:', error.message);
     console.error('🔍 Full error:', error);
-    process.exit(1);
+    
+    // Don't exit with error - let the app start anyway
+    // The health check endpoint will handle database setup
+    console.log('⚠️  Migration failed, but continuing with app startup...');
+    console.log('💡 The health check endpoint will attempt to set up the database');
   }
 }
 
