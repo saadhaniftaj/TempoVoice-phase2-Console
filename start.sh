@@ -4,8 +4,12 @@ echo "🚀 Starting TempoVoice Dashboard..."
 
 # Run database migration
 echo "📊 Running database migration..."
-npx prisma db push || {
-    echo "⚠️  Migration failed, but continuing..."
+npx prisma db push --accept-data-loss --skip-generate || {
+    echo "⚠️  Migration failed, retrying..."
+    sleep 2
+    npx prisma db push --accept-data-loss --skip-generate || {
+        echo "⚠️  Migration failed again, but continuing..."
+    }
 }
 
 # Create admin user if needed
