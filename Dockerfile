@@ -14,6 +14,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public directory exists
+RUN mkdir -p ./public
+
 # Generate Prisma client and build Next.js
 RUN npx prisma generate && npm run build
 
