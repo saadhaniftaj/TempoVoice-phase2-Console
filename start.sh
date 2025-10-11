@@ -1,16 +1,19 @@
 #!/bin/sh
 
 echo "🚀 Starting TempoVoice Dashboard..."
+echo "DATABASE_URL is: $(echo $DATABASE_URL | sed 's/:\/\/[^:]*:[^@]*@/:\/\/***:***@/')"
 
 # Run database migration
 echo "📊 Running database migration..."
-npx prisma db push --accept-data-loss --skip-generate || {
-    echo "⚠️  Migration failed, retrying..."
-    sleep 2
-    npx prisma db push --accept-data-loss --skip-generate || {
-        echo "⚠️  Migration failed again, but continuing..."
+npx prisma db push --accept-data-loss --skip-generate 2>&1 || {
+    echo "⚠️  Migration failed, retrying in 3 seconds..."
+    sleep 3
+    npx prisma db push --accept-data-loss --skip-generate 2>&1 || {
+        echo "❌ Migration failed again!"
+        echo "⚠️  Continuing anyway - health check will handle it..."
     }
 }
+echo "✅ Migration step completed"
 
 # Create admin user if needed
 echo "👤 Setting up admin user..."
