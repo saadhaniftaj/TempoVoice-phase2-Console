@@ -9,7 +9,8 @@
     "start:railway": "./scripts/start.sh",
     "lint": "eslint",
     "seed": "tsx scripts/clean-seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "postdeploy": "npx prisma db push && node scripts/setup-admin.js"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.907.0",
