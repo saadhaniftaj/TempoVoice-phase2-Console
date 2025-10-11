@@ -26,11 +26,9 @@ export async function GET() {
       await prisma.user.create({
         data: {
           email: 'admin@tempovoice.com',
-          password: hashedPassword,
-          name: 'Admin User',
+          passwordHash: hashedPassword,
           role: 'ADMIN',
           tenantId: 'default',
-          isActive: true,
         }
       });
     }
