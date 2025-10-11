@@ -95,20 +95,16 @@ export default function NewAgentPage() {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.agent.status === 'ACTIVE') {
-          setSuccess('Agent created and deployed successfully!');
-          setWebhookEndpoint(data.agent.webhookEndpoint);
-          
-          // Redirect to agents list after 2 seconds
-          setTimeout(() => {
-            router.push('/dashboard/agents');
-          }, 2000);
-        } else if (data.agent.status === 'ERROR') {
-          setError(`Agent created but deployment failed: ${data.deploymentError || 'Unknown error'}`);
-        } else {
-          setSuccess('Agent created successfully!');
-          setWebhookEndpoint(data.agent.webhookEndpoint);
-        }
+        // Use the webhook URL from deployment (Lambda returns /incoming-call endpoint)
+        const webhookUrl = data.deployment?.webhookUrl || data.agent.webhookEndpoint;
+        
+        setSuccess('Agent created and deployed successfully!');
+        setWebhookEndpoint(webhookUrl);
+        
+        // Always redirect to agents list after 2 seconds
+        setTimeout(() => {
+          router.push('/dashboard/agents');
+        }, 2000);
       } else {
         setError(data.message || 'Failed to create agent');
       }

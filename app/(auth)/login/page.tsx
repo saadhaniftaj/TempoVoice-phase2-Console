@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,7 +82,14 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="flex items-center justify-center mb-6">
             <div className="w-32 h-32 rounded-xl flex items-center justify-center shadow-lg" style={{boxShadow: '0 0 30px #3b82f644'}}>
-              <img src="/images/tempo-logo.png" alt="Tempo AI" className="w-24 h-24 logo-img" />
+              <Image 
+                src="/images/tempo-logo.png" 
+                alt="Tempo AI" 
+                width={96} 
+                height={96} 
+                className="logo-img"
+                priority
+              />
             </div>
           </div>
           <h1 className="text-4xl font-bold text-blue-600 mb-2" style={{

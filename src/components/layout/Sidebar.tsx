@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -47,7 +48,14 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg" style={{boxShadow: '0 0 12px #3b82f611'}}>
-                  <img src="/images/tempo-logo.png" alt="Tempo AI" className="w-8 h-8 logo-img" />
+                  <Image 
+                    src="/images/tempo-logo.png" 
+                    alt="Tempo AI" 
+                    width={32} 
+                    height={32} 
+                    className="logo-img"
+                    priority
+                  />
                 </div>
                 <span className="text-xl font-bold text-gray-900" style={{letterSpacing: '-0.03em'}}>TempoVoice</span>
               </div>
