@@ -10,11 +10,15 @@ const { PrismaClient } = require('./app/generated/prisma');
 
 async function migrateDatabase() {
   console.log('🚀 Starting database migration...');
+  console.log('🔗 Database URL:', process.env.DATABASE_URL ? 'SET' : 'NOT SET');
   
   try {
     // Run Prisma migration
     console.log('📊 Running Prisma database push...');
-    execSync('npx prisma db push', { stdio: 'inherit' });
+    execSync('npx prisma db push', { 
+      stdio: 'inherit',
+      env: process.env 
+    });
     console.log('✅ Database migration completed successfully');
     
     // Create admin user
@@ -52,7 +56,14 @@ async function migrateDatabase() {
     console.log('🎉 Database setup completed successfully!');
     
   } catch (error) {
-    console.error('❌ Database migration failed:', error);
+    console.error('❌ Database migration failed:', error.message);
+    console.error('🔍 Full error:', error);
+    
+    // If it's a connection error, provide helpful message
+    if (error.message.includes('Can\'t reach database server')) {
+      console.error('💡 Hint: Make sure DATABASE_URL is correctly set in Railway environment variables');
+    }
+    
     process.exit(1);
   }
 }
