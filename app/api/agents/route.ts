@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
         summaryPhoneNumber,
         twilioAccountSid,
         twilioApiSecret,
+        twilioApiSid,
         voiceId,
         webhookEndpoint,
         // required json column
