@@ -28,9 +28,9 @@ export default function NewAgentPage() {
     callPhoneNumber: '',
     transferPhoneNumber: '',
     summaryPhoneNumber: '',
-    twilioAccountSid: '',
-    twilioApiSecret: '',
-    twilioApiSid: '',
+    twilioAccountSid: process.env.NEXT_PUBLIC_TWILIO_ACCOUNT_SID || '',
+    twilioApiSecret: process.env.NEXT_PUBLIC_TWILIO_API_SECRET || '',
+    twilioApiSid: process.env.NEXT_PUBLIC_TWILIO_API_SID || '',
     voiceId: ''
   });
 
