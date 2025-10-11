@@ -20,7 +20,7 @@ export async function GET() {
 
     if (!adminUser) {
       // Create admin user if it doesn't exist
-      const bcrypt = require('bcryptjs');
+      const bcrypt = await import('bcryptjs');
       const hashedPassword = await bcrypt.hash('admin123', 10);
       
       await prisma.user.create({
