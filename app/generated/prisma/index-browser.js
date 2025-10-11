@@ -147,6 +147,7 @@ exports.Prisma.AgentScalarFieldEnum = {
   summaryPhoneNumber: 'summaryPhoneNumber',
   twilioAccountSid: 'twilioAccountSid',
   twilioApiSecret: 'twilioApiSecret',
+  twilioApiSid: 'twilioApiSid',
   webhookEndpoint: 'webhookEndpoint',
   createdBy: 'createdBy'
 };

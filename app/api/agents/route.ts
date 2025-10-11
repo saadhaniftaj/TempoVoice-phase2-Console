@@ -259,12 +259,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating agent:', error);
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
     });
     return NextResponse.json(
-      { message: 'Internal server error', error: error.message },
+      { message: 'Internal server error', error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

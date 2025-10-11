@@ -49,7 +49,7 @@ NEXT_PUBLIC_BASE_URL=https://your-railway-app.up.railway.app
 DEPLOY_AGENT_LAMBDA=shttempo-deploy-agent
 NODE_ENV=production
 
-# Twilio Configuration (Replace with your actual credentials)
+ # Twilio Configuration (Replace with your actual credentials)
 TWILIO_ACCOUNT_SID=YOUR_TWILIO_ACCOUNT_SID
 TWILIO_API_SECRET=YOUR_TWILIO_API_SECRET
 TWILIO_API_SID=YOUR_TWILIO_API_SID

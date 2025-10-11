@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     console.error('❌ Authentication error:', error);
     return NextResponse.json({ 
       message: 'Internal server error',
-      error: error.message 
+      error: error instanceof Error ? error.message : String(error) 
     }, { status: 500 });
   }
 }

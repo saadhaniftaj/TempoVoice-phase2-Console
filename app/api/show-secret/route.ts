@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({ 
       message: 'Error',
-      error: error.message 
+      error: error instanceof Error ? error.message : String(error) 
     }, { status: 500 });
   }
 }

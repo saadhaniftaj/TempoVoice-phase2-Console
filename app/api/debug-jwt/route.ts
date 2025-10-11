@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       result = jwt.verify(token, secret);
       console.log('✅ JWT verification successful');
     } catch (error) {
-      console.log('❌ JWT verification failed:', error.message);
-      result = { error: error.message };
+      console.log('❌ JWT verification failed:', error instanceof Error ? error.message : String(error));
+      result = { error: error instanceof Error ? error.message : String(error) };
     }
     
     // Also decode without verification
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({ 
       message: 'Error',
-      error: error.message 
+      error: error instanceof Error ? error.message : String(error) 
     }, { status: 500 });
   }
 }
