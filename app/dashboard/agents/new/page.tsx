@@ -30,6 +30,7 @@ export default function NewAgentPage() {
     summaryPhoneNumber: '',
     twilioAccountSid: '',
     twilioApiSecret: '',
+    twilioApiSid: '',
     voiceId: ''
   });
 
@@ -446,6 +447,20 @@ export default function NewAgentPage() {
                   value={formData.twilioApiSecret}
                   onChange={handleInputChange}
                   placeholder="Enter Twilio API secret"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="twilioApiSid" className="block text-sm font-medium text-gray-700 mb-2">
+                  Twilio API SID *
+                </label>
+                <Input
+                  id="twilioApiSid"
+                  name="twilioApiSid"
+                  value={formData.twilioApiSid}
+                  onChange={handleInputChange}
+                  placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   required
                 />
               </div>
