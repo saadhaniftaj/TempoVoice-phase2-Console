@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
           status: 'ERROR',
           webhookEndpoint: agent.webhookEndpoint
         },
-        deploymentError: deploymentError.message
+        deploymentError: deploymentError instanceof Error ? deploymentError.message : String(deploymentError)
       });
     }
 
