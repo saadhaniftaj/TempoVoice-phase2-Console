@@ -40,15 +40,47 @@ COPY --from=builder /app/prisma ./prisma
 # Create data directory
 RUN mkdir -p /app/data
 
-# Create entrypoint script
-RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
-    echo 'echo "🚀 Starting TempoVoice Dashboard..."' >> /app/entrypoint.sh && \
-    echo 'echo "📊 Running database migration..."' >> /app/entrypoint.sh && \
-    echo 'npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "⚠️ Migration failed"' >> /app/entrypoint.sh && \
-    echo 'echo "👤 Creating admin user if needed..."' >> /app/entrypoint.sh && \
-    echo 'node -e "const { PrismaClient } = require(\"./app/generated/prisma\"); const bcrypt = require(\"bcryptjs\"); (async () => { const p = new PrismaClient(); try { const e = await p.user.findFirst({ where: { email: \"admin@tempovoice.com\" } }); if (!e) { await p.user.create({ data: { email: \"admin@tempovoice.com\", passwordHash: await bcrypt.hash(\"admin123\", 10), role: \"ADMIN\", tenantId: \"default\" } }); console.log(\"✅ Admin created\"); } else { console.log(\"✅ Admin exists\"); } } catch (err) { console.log(\"⚠️ Admin setup failed:\", err.message); } finally { await p.\\$disconnect(); } })();" 2>&1 || echo "⚠️ Admin setup failed"' >> /app/entrypoint.sh && \
-    echo 'echo "🎯 Starting Next.js..."' >> /app/entrypoint.sh && \
-    echo 'exec npm run start' >> /app/entrypoint.sh && \
-    chmod +x /app/entrypoint.sh
+# Copy and create entrypoint script
+COPY <<'EOF' /app/entrypoint.sh
+#!/bin/sh
+echo "🚀 Starting TempoVoice Dashboard..."
+echo "📊 Running database migration..."
+npx prisma db push --accept-data-loss --skip-generate 2>&1 || echo "⚠️ Migration failed"
+echo "👤 Creating admin user if needed..."
+node -e "
+const { PrismaClient } = require('./app/generated/prisma');
+const bcrypt = require('bcryptjs');
+(async () => {
+  const prisma = new PrismaClient();
+  try {
+    const existing = await prisma.user.findFirst({
+      where: { email: 'admin@tempovoice.com' }
+    });
+    if (!existing) {
+      const hash = await bcrypt.hash('admin123', 10);
+      await prisma.user.create({
+        data: {
+          email: 'admin@tempovoice.com',
+          passwordHash: hash,
+          role: 'ADMIN',
+          tenantId: 'default'
+        }
+      });
+      console.log('✅ Admin created');
+    } else {
+      console.log('✅ Admin exists');
+    }
+  } catch (err) {
+    console.log('⚠️ Admin setup failed:', err.message);
+  } finally {
+    await prisma.\$disconnect();
+  }
+})();
+" || echo "⚠️ Admin setup failed"
+echo "🎯 Starting Next.js..."
+exec npm run start
+EOF
+
+RUN chmod +x /app/entrypoint.sh
 
 CMD ["/app/entrypoint.sh"]
