@@ -15,6 +15,13 @@
   --foreground: #171717;
 }
 
+.dark {
+  --background: #0f0f0f;
+  --foreground: #fafafa;
+  --spotify-card: #1a1a1a;
+  --spotify-card-hover: #2a2a2a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -142,6 +149,17 @@ body::before {
   transform: translateY(-4px);
 }
 
+.dark .vanguard-card {
+  background: #1a1a1a;
+  border-color: #374151;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(59,130,246,0.1);
+}
+
+.dark .vanguard-card:hover {
+  box-shadow: 0 10px 30px rgba(59,130,246,0.2);
+  border-color: rgba(59,130,246,0.4);
+}
+
 /* Sidebar Styles */
 .vanguard-sidebar {
   background: #ffffff;
@@ -149,11 +167,37 @@ body::before {
   box-shadow: 0 1px 0 #0000;
 }
 
+.dark .vanguard-sidebar {
+  background: #111111;
+  border-right-color: #374151;
+}
+
 /* Header Styles */
 .vanguard-header {
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
   box-shadow: 0 1px 0 #0000;
+}
+
+.vanguard-header h1 {
+  color: #111827 !important;
+}
+
+.vanguard-header p {
+  color: #6b7280 !important;
+}
+
+.dark .vanguard-header {
+  background: #111111;
+  border-bottom-color: #374151;
+}
+
+.dark .vanguard-header h1 {
+  color: #ffffff !important;
+}
+
+.dark .vanguard-header p {
+  color: #9ca3af !important;
 }
 
 /* Input Styles */
@@ -174,6 +218,21 @@ body::before {
 
 .vanguard-input::placeholder {
   color: var(--spotify-grey);
+}
+
+.dark .vanguard-input {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+.dark .vanguard-input:focus {
+  border-color: var(--spotify-blue);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.dark .vanguard-input::placeholder {
+  color: #9ca3af;
 }
 
 /* Button Variants */

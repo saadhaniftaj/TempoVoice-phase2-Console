@@ -197,29 +197,29 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <div className="vanguard-card">
-          <h3 className="text-xl font-bold text-white mb-2">Quick Actions</h3>
-          <p className="text-gray-400 mb-6">Get started with your voice AI agents</p>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Quick Actions</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Get started with your voice AI agents</p>
           
           <div className="grid grid-cols-2 gap-4">
             <div 
-              className="p-4 cursor-pointer hover:bg-gray-800 transition-all duration-200 border-2 border-dashed border-gray-600 hover:border-blue-400 rounded-xl"
+              className="p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 rounded-xl"
               onClick={() => router.push('/dashboard/agents/new')}
             >
               <div className="text-center">
                 <Bot className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <h4 className="font-medium text-white">Create Agent</h4>
-                <p className="text-sm text-gray-400">Set up a new voice AI agent</p>
+                <h4 className="font-medium text-gray-900 dark:text-white">Create Agent</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Set up a new voice AI agent</p>
               </div>
             </div>
             
             <div 
-              className="p-4 cursor-pointer hover:bg-gray-800 transition-all duration-200 border-2 border-dashed border-gray-600 hover:border-blue-400 rounded-xl"
+              className="p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 rounded-xl"
               onClick={() => router.push('/dashboard/calls')}
             >
               <div className="text-center">
                 <Phone className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <h4 className="font-medium text-white">View Calls</h4>
-                <p className="text-sm text-gray-400">Monitor call activity</p>
+                <h4 className="font-medium text-gray-900 dark:text-white">View Calls</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Monitor call activity</p>
               </div>
             </div>
           </div>
@@ -227,8 +227,8 @@ export default function DashboardPage() {
 
         {/* Recent Activity */}
         <div className="vanguard-card">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Recent Activity</h3>
-          <p className="text-gray-600 mb-6">Latest system events and call activity</p>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Recent Activity</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Latest system events and call activity</p>
           
           <div className="space-y-4">
             {isLoading ? (
@@ -266,24 +266,24 @@ export default function DashboardPage() {
 
         {/* Performance Metrics */}
         <div className="vanguard-card">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Performance</h3>
-          <p className="text-gray-600 mb-6">Key performance indicators</p>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Performance</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">Key performance indicators</p>
           
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Avg Call Duration</span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Avg Call Duration</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 {isLoading ? '...' : `${dashboardData.performanceMetrics.avgCallDuration}m`}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Response Time</span>
-              <span className="text-lg font-semibold text-gray-900">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Response Time</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 {isLoading ? '...' : `${dashboardData.performanceMetrics.responseTime}s`}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Uptime</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Uptime</span>
               <span className="text-lg font-semibold text-green-600">99.9%</span>
             </div>
           </div>

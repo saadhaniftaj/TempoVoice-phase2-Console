@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bot, Phone, Play, Pause, Trash2, Edit, MoreVertical, Copy, CheckCircle } from 'lucide-react';
+import { Bot, Phone, Play, Pause, Trash2, Edit, MoreVertical, Copy, CheckCircle, Files } from 'lucide-react';
 
 interface Agent {
   id: string;
@@ -129,26 +129,85 @@ export default function AgentsPage() {
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      } else {
+        // Fallback for older browsers or non-HTTPS
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          setCopiedId(id);
+          setTimeout(() => setCopiedId(null), 2000);
+        } catch (err) {
+          console.error('Fallback copy failed:', err);
+          alert('Failed to copy to clipboard');
+        }
+        
+        document.body.removeChild(textArea);
+      }
     } catch (error) {
       console.error('Failed to copy:', error);
+      alert('Failed to copy to clipboard');
+    }
+  };
+
+  const handleCloneAgent = async (agent: Agent) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/agents/${agent.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const agentData = await response.json();
+        
+        // Remove phone number and ID from cloned data
+        const clonedData = {
+          ...agentData,
+          name: `${agentData.name} (Copy)`,
+          callPhoneNumber: '', // Remove phone number
+          status: 'DRAFT' // Reset status
+        };
+        
+        // Store cloned data in localStorage and navigate to create page
+        localStorage.setItem('clonedAgentData', JSON.stringify(clonedData));
+        router.push('/dashboard/agents/new?cloned=true');
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Failed to fetch agent data for cloning');
+      }
+    } catch (error) {
+      console.error('Error cloning agent:', error);
+      alert('An unexpected error occurred while cloning the agent');
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'DEPLOYING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'ERROR':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'PENDING':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
   };
 
@@ -169,8 +228,8 @@ export default function AgentsPage() {
         {/* Header with Add Button */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Voice AI Agents</h1>
-            <p className="text-gray-600 mt-1">Create and manage your voice AI agents</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Voice AI Agents</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Create and manage your voice AI agents</p>
           </div>
           <Button
             onClick={() => router.push('/dashboard/agents/new')}
@@ -197,9 +256,9 @@ export default function AgentsPage() {
         ) : agents.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
-              <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Agents</h3>
-              <p className="text-gray-600 mb-4">Get started by creating your first voice AI agent</p>
+              <Bot className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No Agents</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by creating your first voice AI agent</p>
               <Button
                 onClick={() => router.push('/dashboard/agents/new')}
                 className="new-agent-button"
@@ -217,7 +276,7 @@ export default function AgentsPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <Bot className="w-5 h-5 text-blue-500" />
-                      <span className="font-medium text-gray-900">{agent.name}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{agent.name}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(agent.status)}`}>
@@ -227,7 +286,7 @@ export default function AgentsPage() {
                   </div>
 
                   <div className="mb-4">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
                       <Phone className="w-4 h-4" />
                       <span>{agent.callPhoneNumber}</span>
                     </div>
@@ -235,11 +294,11 @@ export default function AgentsPage() {
 
                   {agent.webhookEndpoint && (
                     <div className="mb-4">
-                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                      <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                         Webhook URL:
                       </label>
                       <div className="flex items-center space-x-2">
-                        <code className="flex-1 text-xs bg-gray-100 px-2 py-1 rounded truncate">
+                        <code className="flex-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2 py-1 rounded truncate">
                           {agent.webhookEndpoint}
                         </code>
                         <Button
@@ -258,7 +317,7 @@ export default function AgentsPage() {
                     </div>
                   )}
 
-                  <div className="text-xs text-gray-500 mb-4">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                     Created: {new Date(agent.createdAt).toLocaleDateString()}
                   </div>
 
@@ -284,6 +343,16 @@ export default function AgentsPage() {
                         Start
                       </Button>
                     ) : null}
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCloneAgent(agent)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <Files className="w-3 h-3 mr-1" />
+                      Clone
+                    </Button>
 
                     <Button
                       size="sm"

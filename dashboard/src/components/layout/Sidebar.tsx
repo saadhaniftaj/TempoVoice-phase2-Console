@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -44,17 +45,24 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div className={`flex flex-col h-full vanguard-sidebar ${className}`}>
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+      <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-2">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg" style={{boxShadow: '0 0 12px #3b82f611'}}>
-                  <img src="/images/tempo-logo.png" alt="Tempo AI" className="w-8 h-8 logo-img" />
+                  <Image 
+                    src="/images/tempo-logo.png" 
+                    alt="Tempo AI" 
+                    width={32} 
+                    height={32} 
+                    className="logo-img"
+                    priority
+                  />
                 </div>
-                <span className="text-xl font-bold text-gray-900" style={{letterSpacing: '-0.03em'}}>TempoVoice</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white" style={{letterSpacing: '-0.03em'}}>TempoVoice</span>
               </div>
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
             <span className="text-sm font-medium text-white">
@@ -62,10 +70,10 @@ export function Sidebar({ className }: SidebarProps) {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
               {user?.email}
             </p>
-            <p className="text-xs text-gray-500 capitalize">
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
               {user?.role?.toLowerCase()}
             </p>
           </div>
@@ -84,7 +92,7 @@ export function Sidebar({ className }: SidebarProps) {
               className={`w-full flex items-center px-3 py-2 text-left rounded-lg transition-all duration-200 ${
                 isActive 
                   ? 'text-white bg-blue-600 shadow-lg' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
               }`}
               onClick={() => router.push(item.href)}
             >
@@ -96,7 +104,7 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       {/* Quick Actions */}
-      <div className="p-4 border-t border-gray-700 space-y-2">
+      <div className="p-4 border-t border-gray-700 dark:border-gray-600 space-y-2">
                 <button 
                   className="w-full new-agent-button flex items-center justify-center text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
                   onClick={() => router.push('/dashboard/agents/new')}

@@ -28,8 +28,9 @@ export default function NewAgentPage() {
     callPhoneNumber: '',
     transferPhoneNumber: '',
     summaryPhoneNumber: '',
-    twilioAccountSid: '',
-    twilioApiSecret: '',
+    twilioAccountSid: process.env.NEXT_PUBLIC_TWILIO_ACCOUNT_SID || '',
+    twilioApiSecret: process.env.NEXT_PUBLIC_TWILIO_API_SECRET || '',
+    twilioApiSid: process.env.NEXT_PUBLIC_TWILIO_API_SID || '',
     voiceId: ''
   });
 
@@ -44,8 +45,28 @@ export default function NewAgentPage() {
   useEffect(() => {
     if (isAuthenticated) {
       loadAvailableNumbers();
+      loadClonedData();
     }
   }, [isAuthenticated]);
+
+  const loadClonedData = () => {
+    const clonedData = localStorage.getItem('clonedAgentData');
+    if (clonedData) {
+      try {
+        const parsedData = JSON.parse(clonedData);
+        setFormData(prev => ({
+          ...prev,
+          ...parsedData,
+          callPhoneNumber: '', // Always clear phone number for cloned agents
+          name: parsedData.name || prev.name
+        }));
+        // Clear the cloned data from localStorage
+        localStorage.removeItem('clonedAgentData');
+      } catch (error) {
+        console.error('Error parsing cloned agent data:', error);
+      }
+    }
+  };
 
   const loadAvailableNumbers = async () => {
     try {
@@ -66,13 +87,22 @@ export default function NewAgentPage() {
   };
 
   const isFormValid = () => {
-    return Object.values(formData).every(value => value.trim() !== '');
+    // Only require: phone number, voice, and Twilio credentials
+    const requiredFields = {
+      callPhoneNumber: formData.callPhoneNumber,
+      voiceId: formData.voiceId,
+      twilioAccountSid: formData.twilioAccountSid,
+      twilioApiSecret: formData.twilioApiSecret,
+      twilioApiSid: formData.twilioApiSid
+    };
+    
+    return Object.values(requiredFields).every(value => value.trim() !== '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid()) {
-      setError('All fields are required');
+      setError('Phone number, voice selection, and Twilio credentials are required');
       return;
     }
 
@@ -94,8 +124,16 @@ export default function NewAgentPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Agent created successfully!');
-        setWebhookEndpoint(data.webhookEndpoint);
+        // Use the webhook URL from deployment (Lambda returns /incoming-call endpoint)
+        const webhookUrl = data.deployment?.webhookUrl || data.agent.webhookEndpoint;
+        
+        setSuccess('Agent created and deployed successfully!');
+        setWebhookEndpoint(webhookUrl);
+        
+        // Always redirect to agents list after 2 seconds
+        setTimeout(() => {
+          router.push('/dashboard/agents');
+        }, 2000);
       } else {
         setError(data.message || 'Failed to create agent');
       }
@@ -107,14 +145,16 @@ export default function NewAgentPage() {
   };
 
   if (!isAuthenticated) {
-    router.push('/login');
+    if (typeof window !== 'undefined') {
+      router.push('/login');
+    }
     return null;
   }
 
   return (
     <DashboardLayout 
       title="Create New Agent" 
-      subtitle="Configure your voice AI agent with all required settings"
+      subtitle="Configure your voice AI agent - only phone number, voice, and Twilio credentials are required"
     >
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
@@ -186,7 +226,7 @@ export default function NewAgentPage() {
             <CardContent className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Agent Name *
+                  Agent Name
                 </label>
                 <Input
                   id="name"
@@ -194,7 +234,6 @@ export default function NewAgentPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Enter agent name (e.g., Customer Support Bot)"
-                  required
                 />
               </div>
             </CardContent>
@@ -214,7 +253,7 @@ export default function NewAgentPage() {
             <CardContent className="space-y-4">
               <div>
                 <label htmlFor="knowledgeBase" className="block text-sm font-medium text-gray-700 mb-2">
-                  Knowledge Base *
+                  Knowledge Base
                 </label>
                 <Textarea
                   id="knowledgeBase"
@@ -223,13 +262,12 @@ export default function NewAgentPage() {
                   onChange={handleInputChange}
                   placeholder="Enter knowledge base content or instructions..."
                   rows={4}
-                  required
                 />
               </div>
               
               <div>
                 <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
-                  System Prompt *
+                  System Prompt
                 </label>
                 <Textarea
                   id="prompt"
@@ -238,13 +276,12 @@ export default function NewAgentPage() {
                   onChange={handleInputChange}
                   placeholder="Enter the system prompt for the AI agent..."
                   rows={4}
-                  required
                 />
               </div>
               
               <div>
                 <label htmlFor="guardrails" className="block text-sm font-medium text-gray-700 mb-2">
-                  Guardrails *
+                  Guardrails
                 </label>
                 <Textarea
                   id="guardrails"
@@ -253,7 +290,6 @@ export default function NewAgentPage() {
                   onChange={handleInputChange}
                   placeholder="Enter safety guardrails and restrictions..."
                   rows={3}
-                  required
                 />
               </div>
             </CardContent>
@@ -273,7 +309,7 @@ export default function NewAgentPage() {
             <CardContent className="space-y-4">
               <div>
                 <label htmlFor="voiceId" className="block text-sm font-medium text-gray-700 mb-2">
-                  Voice ID *
+                  Voice ID <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="voiceId"
@@ -290,6 +326,22 @@ export default function NewAgentPage() {
                   </optgroup>
                   <optgroup label="English (GB)">
                     <option value="amy">Amy - Feminine-sounding voice</option>
+                  </optgroup>
+                  <optgroup label="French">
+                    <option value="ambre">Ambre - Feminine-sounding voice</option>
+                    <option value="florian">Florian - Masculine-sounding voice</option>
+                  </optgroup>
+                  <optgroup label="Italian">
+                    <option value="beatrice">Beatrice - Feminine-sounding voice</option>
+                    <option value="lorenzo">Lorenzo - Masculine-sounding voice</option>
+                  </optgroup>
+                  <optgroup label="German">
+                    <option value="greta">Greta - Feminine-sounding voice</option>
+                    <option value="lennart">Lennart - Masculine-sounding voice</option>
+                  </optgroup>
+                  <optgroup label="Spanish">
+                    <option value="lupe">Lupe - Feminine-sounding voice</option>
+                    <option value="carlos">Carlos - Masculine-sounding voice</option>
                   </optgroup>
                 </select>
                 <p className="text-sm text-gray-500 mt-1">
@@ -313,7 +365,7 @@ export default function NewAgentPage() {
             <CardContent className="space-y-4">
               <div>
                 <label htmlFor="makeEndpoint" className="block text-sm font-medium text-gray-700 mb-2">
-                  Make.com Endpoint *
+                  Make.com Endpoint
                 </label>
                 <Input
                   id="makeEndpoint"
@@ -321,7 +373,6 @@ export default function NewAgentPage() {
                   value={formData.makeEndpoint}
                   onChange={handleInputChange}
                   placeholder="https://hook.eu1.make.com/..."
-                  required
                 />
               </div>
             </CardContent>
@@ -341,7 +392,7 @@ export default function NewAgentPage() {
             <CardContent className="space-y-4">
               <div>
                 <label htmlFor="callPhoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Call Phone Number *
+                  Call Phone Number <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="callPhoneNumber"
@@ -367,7 +418,7 @@ export default function NewAgentPage() {
               
               <div>
                 <label htmlFor="transferPhoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Transfer Endpoint Phone Number *
+                  Transfer Endpoint Phone Number
                 </label>
                 <Input
                   id="transferPhoneNumber"
@@ -375,13 +426,12 @@ export default function NewAgentPage() {
                   value={formData.transferPhoneNumber}
                   onChange={handleInputChange}
                   placeholder="+1234567890"
-                  required
                 />
               </div>
               
               <div>
                 <label htmlFor="summaryPhoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Summary Message Phone Number *
+                  Summary Message Phone Number
                 </label>
                 <Input
                   id="summaryPhoneNumber"
@@ -389,7 +439,6 @@ export default function NewAgentPage() {
                   value={formData.summaryPhoneNumber}
                   onChange={handleInputChange}
                   placeholder="+1234567890"
-                  required
                 />
               </div>
             </CardContent>
@@ -409,7 +458,7 @@ export default function NewAgentPage() {
             <CardContent className="space-y-4">
               <div>
                 <label htmlFor="twilioAccountSid" className="block text-sm font-medium text-gray-700 mb-2">
-                  Twilio Account SID *
+                  Twilio Account SID <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="twilioAccountSid"
@@ -423,7 +472,7 @@ export default function NewAgentPage() {
               
               <div>
                 <label htmlFor="twilioApiSecret" className="block text-sm font-medium text-gray-700 mb-2">
-                  Twilio API Secret *
+                  Twilio API Secret <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="twilioApiSecret"
@@ -432,6 +481,20 @@ export default function NewAgentPage() {
                   value={formData.twilioApiSecret}
                   onChange={handleInputChange}
                   placeholder="Enter Twilio API secret"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="twilioApiSid" className="block text-sm font-medium text-gray-700 mb-2">
+                  Twilio API SID <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="twilioApiSid"
+                  name="twilioApiSid"
+                  value={formData.twilioApiSid}
+                  onChange={handleInputChange}
+                  placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                   required
                 />
               </div>
