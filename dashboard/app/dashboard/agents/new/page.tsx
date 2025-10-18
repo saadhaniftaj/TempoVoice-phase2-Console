@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileUpload } from '@/components/ui/file-upload';
 import { ArrowLeft, Bot, Phone, Settings, MessageSquare, Shield, Zap } from 'lucide-react';
 
 export default function NewAgentPage() {
@@ -40,6 +41,14 @@ export default function NewAgentPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleFileUpload = (fieldName: string) => (text: string, fileName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: text
+    }));
+    setSuccess(`Text extracted from ${fileName} and added to ${fieldName.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
   };
 
   useEffect(() => {
@@ -255,12 +264,16 @@ export default function NewAgentPage() {
                 <label htmlFor="knowledgeBase" className="block text-sm font-medium text-gray-700 mb-2">
                   Knowledge Base
                 </label>
+                <FileUpload
+                  onTextExtracted={handleFileUpload('knowledgeBase')}
+                  className="mb-3"
+                />
                 <Textarea
                   id="knowledgeBase"
                   name="knowledgeBase"
                   value={formData.knowledgeBase}
                   onChange={handleInputChange}
-                  placeholder="Enter knowledge base content or instructions..."
+                  placeholder="Enter knowledge base content or instructions, or upload a file above..."
                   rows={4}
                 />
               </div>
@@ -269,12 +282,16 @@ export default function NewAgentPage() {
                 <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-2">
                   System Prompt
                 </label>
+                <FileUpload
+                  onTextExtracted={handleFileUpload('prompt')}
+                  className="mb-3"
+                />
                 <Textarea
                   id="prompt"
                   name="prompt"
                   value={formData.prompt}
                   onChange={handleInputChange}
-                  placeholder="Enter the system prompt for the AI agent..."
+                  placeholder="Enter the system prompt for the AI agent, or upload a file above..."
                   rows={4}
                 />
               </div>
@@ -283,12 +300,16 @@ export default function NewAgentPage() {
                 <label htmlFor="guardrails" className="block text-sm font-medium text-gray-700 mb-2">
                   Guardrails
                 </label>
+                <FileUpload
+                  onTextExtracted={handleFileUpload('guardrails')}
+                  className="mb-3"
+                />
                 <Textarea
                   id="guardrails"
                   name="guardrails"
                   value={formData.guardrails}
                   onChange={handleInputChange}
-                  placeholder="Enter safety guardrails and restrictions..."
+                  placeholder="Enter safety guardrails and restrictions, or upload a file above..."
                   rows={3}
                 />
               </div>
