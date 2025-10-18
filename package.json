@@ -1,0 +1,29 @@
+{
+  "name": "tempo-voice-dashboard",
+  "version": "1.0.0",
+  "description": "Tempo Voice Dashboard - AI Agent Management Console",
+  "private": true,
+  "scripts": {
+    "build": "cd dashboard && npm install && npm run build",
+    "start": "cd dashboard && npm run start",
+    "dev": "cd dashboard && npm run dev",
+    "install": "cd dashboard && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saadhaniftaj/TempoVoice-phase2-Console.git"
+  },
+  "keywords": [
+    "ai",
+    "voice",
+    "dashboard",
+    "nextjs",
+    "railway"
+  ],
+  "author": "Tempo Voice Team",
+  "license": "MIT"
+}
