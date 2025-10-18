@@ -1,0 +1,13 @@
+# Ignore everything except dashboard and essential files
+agent-template/
+*.md
+.gitignore
+LICENSE
+CONTRIBUTING.md
+env.example
+
+# Keep only dashboard and root config files
+!dashboard/
+!package.json
+!nixpacks.toml
+!railway.json

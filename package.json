@@ -4,10 +4,10 @@
   "description": "Tempo Voice Dashboard - AI Agent Management Console",
   "private": true,
   "scripts": {
-    "build": "cd dashboard && npm install && npm run build",
-    "start": "cd dashboard && npm run start",
-    "dev": "cd dashboard && npm run dev",
-    "install": "cd dashboard && npm install"
+    "build": "npm install --prefix dashboard && npm run build --prefix dashboard",
+    "start": "npm run start --prefix dashboard",
+    "dev": "npm run dev --prefix dashboard",
+    "install": "npm install --prefix dashboard"
   },
   "engines": {
     "node": ">=18.0.0",
