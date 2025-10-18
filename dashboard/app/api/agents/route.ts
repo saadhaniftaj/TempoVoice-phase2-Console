@@ -30,6 +30,13 @@ export async function GET(request: NextRequest) {
         status: true,
         callPhoneNumber: true,
         webhookEndpoint: true,
+        folderId: true,
+        folder: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
         createdAt: true,
         updatedAt: true
       },
@@ -76,7 +83,9 @@ export async function POST(request: NextRequest) {
       summaryPhoneNumber,
       twilioAccountSid,
       twilioApiSecret,
-      voiceId
+      twilioApiSid,
+      voiceId,
+      folderId
     } = body;
 
     // Validate required fields
@@ -120,8 +129,10 @@ export async function POST(request: NextRequest) {
         summaryPhoneNumber,
         twilioAccountSid,
         twilioApiSecret,
+        twilioApiSid: twilioApiSid || '',
         voiceId,
         webhookEndpoint,
+        folderId: folderId || null,
         // required json column
         config: {} as Prisma.JsonObject,
         tenantId: user.tenantId || 'default',

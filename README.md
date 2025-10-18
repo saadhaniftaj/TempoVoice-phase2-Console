@@ -1,262 +1,306 @@
-# 🚀 TempoVoice Phase 2 - Multi-Tenant Voice AI Agent Management Dashboard
+# Tempo Voice - AI Voice Agent Platform
 
-A comprehensive management dashboard for deploying, configuring, and monitoring voice AI agents across multiple tenants.
+A comprehensive AI voice agent platform built with Next.js, featuring real-time voice interactions, agent management, and advanced AI capabilities powered by AWS Bedrock Nova Sonic.
 
-## 🎯 Overview
+## 🚀 Features
 
-TempoVoice Phase 2 is a multi-tenant voice AI agent management system that allows organizations to create, deploy, and manage voice AI agents for their customers. Built with Next.js, TypeScript, and modern web technologies.
+### Core Functionality
+- **AI Voice Agents**: Create and manage intelligent voice agents
+- **Real-time Voice Processing**: Powered by AWS Bedrock Nova Sonic AI
+- **Twilio Integration**: Seamless phone call handling and WebSocket streaming
+- **Agent Management**: Full CRUD operations for voice agents
+- **Folder Organization**: Organize agents into logical folders
+- **File Upload Support**: Upload documents for AI configuration (PDF, DOCX, TXT, MD, CSV)
 
-## ✨ Features
+### Dashboard Features
+- **Modern UI**: Clean, responsive interface built with Tailwind CSS
+- **Authentication**: Secure JWT-based authentication system
+- **Real-time Updates**: Live agent status and call monitoring
+- **Analytics**: Comprehensive call analytics and performance metrics
+- **Phone Number Management**: Manage Twilio phone numbers
+- **User Management**: Multi-user support with role-based access
 
-### 🔐 Authentication & User Management
-- **Role-based Access Control**: Admin and Developer roles with different permissions
-- **User Creation**: Admins can create new users with email invites
-- **Password Security**: Strong password requirements (12+ chars, uppercase, lowercase, numbers, symbols)
-- **Email Invites**: Automatic email invitations with login credentials
+### Technical Features
+- **Containerized Deployment**: Full Docker support with docker-compose
+- **Database Management**: PostgreSQL with Prisma ORM
+- **API-First Architecture**: RESTful APIs with comprehensive endpoints
+- **File Processing**: Advanced text extraction from various document formats
+- **Error Handling**: Robust error handling and logging
+- **Health Monitoring**: Built-in health checks and monitoring
 
-### 🤖 Agent Management
-- **Agent Lifecycle**: Create, start, stop, and delete voice AI agents
-- **Status Tracking**: DRAFT, PENDING, DEPLOYING, ACTIVE, ERROR states
-- **Configuration**: Knowledge base, prompts, guardrails, and integration settings
-- **Webhook Management**: Automatic webhook endpoint generation
+## 🏗️ Architecture
 
-### 📞 Phone Number Management
-- **Number Pool**: Add and manage available phone numbers
-- **Automatic Assignment**: Phone numbers assigned to agents when created
-- **Availability Tracking**: Mark numbers as available/unavailable
-- **Cleanup**: Automatic freeing when agents are deleted
+### Frontend (Dashboard)
+- **Framework**: Next.js 15 with App Router
+- **Styling**: Tailwind CSS with custom components
+- **State Management**: React Context API and Zustand
+- **UI Components**: Radix UI primitives
+- **Authentication**: JWT-based with secure token handling
 
-### 🎨 Modern UI/UX
-- **Vanguard Design System**: Professional white/blue theme
-- **Responsive Layout**: Mobile-friendly design
-- **Dynamic Dashboard**: Real-time data with loading states
-- **Background Animations**: Floating particles with different sizes
-- **Button Effects**: Rainbow/blue glare effects on primary buttons
+### Backend (Agent Template)
+- **Runtime**: Node.js with Fastify
+- **WebSocket**: Real-time audio streaming
+- **AI Integration**: AWS Bedrock Nova Sonic
+- **Voice Processing**: Twilio Programmable Voice
+- **Audio Codecs**: μ-law and LPCM support
 
-### 📊 Dashboard Features
-- **Overview**: Stats, recent activity, and performance metrics
-- **Quick Actions**: Easy access to create agents and view calls
-- **Analytics**: Performance insights and monitoring
-- **Navigation**: Role-based menu with conditional access
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Next.js 15.5.4** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **Radix UI** - Accessible component library
-- **Zustand** - State management
-- **Lucide React** - Icon library
-
-### Backend
-- **Next.js API Routes** - Serverless API endpoints
-- **Prisma ORM** - Database management
-- **SQLite** - Local development database
-- **JWT** - Authentication tokens
-- **bcrypt** - Password hashing
-- **Nodemailer** - Email service
-
-### Database Schema
-- **Users**: Authentication and role management
-- **Agents**: Voice AI agent configurations
-- **Phone Numbers**: Phone number pool management
-- **Calls**: Call history and transcripts
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Git
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/saadhaniftaj/TempoVoice-phase2-Console.git
-   cd TempoVoice-phase2-Console
-   ```
-
-2. **Install dependencies**
-   ```bash
-   cd dashboard
-   npm install
-   ```
-
-3. **Set up the database**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   npm run seed
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-5. **Access the application**
-   - Open [http://localhost:3000](http://localhost:3000)
-   - Login with admin credentials:
-     - Email: `admin@tempovoice.com`
-     - Password: `admin123`
+### Database
+- **ORM**: Prisma with PostgreSQL
+- **Schema**: Comprehensive data models for agents, users, calls, and folders
+- **Migrations**: Automated database schema management
 
 ## 📁 Project Structure
 
 ```
-dashboard/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Authentication pages
-│   ├── api/                      # API routes
-│   ├── dashboard/                # Dashboard pages
-│   └── globals.css               # Global styles
-├── src/
-│   ├── components/               # React components
-│   ├── hooks/                    # Custom hooks
-│   ├── lib/                      # Utility libraries
-│   └── types/                    # TypeScript types
-├── prisma/                       # Database schema
-├── public/                       # Static assets
-└── scripts/                      # Database scripts
+tempo-voice/
+├── dashboard/                 # Next.js Dashboard Application
+│   ├── app/                  # App Router pages and API routes
+│   ├── src/                  # Source code and components
+│   ├── prisma/               # Database schema and migrations
+│   ├── Dockerfile            # Container configuration
+│   ├── docker-compose.yml    # Service orchestration
+│   └── build.sh              # Build automation script
+├── agent-template/           # Voice Agent Server
+│   ├── dist/                 # Compiled JavaScript
+│   ├── src/                  # TypeScript source (if available)
+│   └── package.json          # Dependencies and scripts
+├── lambda/                   # AWS Lambda functions (if applicable)
+├── terraform/                # Infrastructure as Code (if applicable)
+└── README.md                 # This file
 ```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- Docker and Docker Compose
+- AWS Account with Bedrock access
+- Twilio Account with Programmable Voice
+
+### Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd tempo-voice
+   ```
+
+2. **Setup Dashboard**
+   ```bash
+   cd dashboard
+   npm install
+   cp env.local.template .env.local
+   # Configure your environment variables
+   npm run dev
+   ```
+
+3. **Setup Agent Template**
+   ```bash
+   cd agent-template
+   npm install
+   # Configure environment variables
+   npm start
+   ```
+
+### Production Deployment
+
+1. **Using Docker Compose**
+   ```bash
+   cd dashboard
+   ./build.sh
+   ```
+
+2. **Manual Docker Build**
+   ```bash
+   cd dashboard
+   docker-compose build
+   docker-compose up -d
+   ```
 
 ## 🔧 Configuration
 
 ### Environment Variables
-Create a `.env.local` file in the dashboard directory:
 
-```env
+#### Dashboard (.env.local)
+```bash
 # Database
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="file:./dev.db"  # Development
+# DATABASE_URL="postgresql://..."  # Production
 
-# JWT Secret
-JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+# JWT
+JWT_SECRET="your-jwt-secret"
 
-# Email Configuration (Development)
-EMAIL_USER="ethereal.user@ethereal.email"
-EMAIL_PASS="ethereal.pass"
+# AWS
+AWS_ACCESS_KEY_ID="your-aws-key"
+AWS_SECRET_ACCESS_KEY="your-aws-secret"
+AWS_REGION="us-east-1"
 
-# Base URL
-NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+# Twilio
+TWILIO_ACCOUNT_SID="your-twilio-sid"
+TWILIO_API_SECRET="your-twilio-secret"
+TWILIO_API_SID="your-twilio-api-sid"
 ```
 
-### Database Setup
-The application uses SQLite for local development. For production, you can configure PostgreSQL or MySQL.
+#### Agent Template (.env)
+```bash
+# AWS Bedrock
+AWS_PROFILE="bedrock-test"
+AWS_ACCESS_KEY_ID="your-aws-key"
+AWS_SECRET_ACCESS_KEY="your-aws-secret"
+AWS_REGION="us-east-1"
 
-## 🚀 Deployment
+# Twilio
+TWILIO_ACCOUNT_SID="your-twilio-sid"
+TWILIO_API_SECRET="your-twilio-secret"
+TWILIO_API_SID="your-twilio-api-sid"
+```
 
-### AWS Deployment (Production Ready)
-The system is designed for AWS deployment with:
-- **Lambda Functions** - Serverless compute for agent deployment
-- **Fargate** - Containerized agent execution
-- **ECR** - Container registry
-- **ALB** - Load balancing for multiple calls
-- **S3** - Call transcript storage
-- **SNS** - WhatsApp notifications
-- **DynamoDB** - Production database
+## 📚 API Documentation
 
-### Local Development
-The current setup is optimized for local development and testing.
+### Dashboard APIs
 
-## 👥 User Roles
-
-### Admin Users
-- ✅ Full access to all features
-- ✅ User management (create/delete users)
-- ✅ System settings access
-- ✅ All agent and number management
-
-### Developer Users
-- ✅ Agent creation and management
-- ✅ Phone number management
-- ✅ Call monitoring
-- ✅ Analytics access
-- ❌ User management
-- ❌ System settings
-
-## 📧 Email System
-
-### Development Mode
-- Email details logged to console
-- No SMTP configuration needed
-- Perfect for testing
-
-### Production Mode
-- Configure SMTP credentials
-- Beautiful HTML email templates
-- Professional branding
-
-## 🔒 Security Features
-
-- **Password Hashing**: bcrypt with salt rounds
-- **JWT Tokens**: Secure token-based authentication
-- **Role Protection**: API endpoints protected by role verification
-- **Input Validation**: Server-side validation for all inputs
-- **Self-Protection**: Admins cannot delete their own accounts
-
-## 📊 API Endpoints
-
-### Authentication
+#### Authentication
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
 
-### Users (Admin Only)
-- `GET /api/users` - List all users
-- `POST /api/users` - Create new user
-- `DELETE /api/users/[id]` - Delete user
-
-### Agents
-- `GET /api/agents` - List user's agents
+#### Agents
+- `GET /api/agents` - List all agents
 - `POST /api/agents` - Create new agent
+- `GET /api/agents/[id]` - Get agent details
+- `PUT /api/agents/[id]` - Update agent
 - `DELETE /api/agents/[id]` - Delete agent
 - `POST /api/agents/[id]/start` - Start agent
 - `POST /api/agents/[id]/stop` - Stop agent
 
-### Phone Numbers
-- `GET /api/phone-numbers` - List phone numbers
-- `POST /api/phone-numbers` - Add phone number
-- `DELETE /api/phone-numbers/[id]` - Delete phone number
+#### Folders
+- `GET /api/folders` - List all folders
+- `POST /api/folders` - Create new folder
+- `PUT /api/agents/[id]/folder` - Move agent to folder
 
-## 🎨 Design System
+#### File Upload
+- `POST /api/upload/extract-text` - Upload and extract text from documents
 
-### Color Palette
-- **Primary Blue**: #3b82f6
-- **Background**: White (#ffffff)
-- **Text**: Dark gray (#1f2937)
-- **Accents**: Blue gradients and glows
+### Agent Template APIs
 
-### Components
-- **Vanguard Cards**: Elevated cards with subtle shadows
-- **Buttons**: Primary (blue) and secondary (outline) styles
-- **Forms**: Consistent input styling with validation
-- **Navigation**: Sidebar with role-based menu items
+#### WebSocket
+- `WebSocket /ws` - Real-time audio streaming
+- Handles Twilio media streams and Bedrock AI responses
 
-## 🚀 Future Enhancements
+## 🐳 Docker Deployment
 
-- **Real-time Updates**: WebSocket integration for live status updates
-- **Advanced Analytics**: Detailed performance metrics and reporting
-- **Multi-language Support**: Internationalization
-- **API Documentation**: Swagger/OpenAPI integration
-- **Testing**: Comprehensive test suite
-- **Monitoring**: Application performance monitoring
+### Services
+- **dashboard**: Next.js application (port 3000)
+- **postgres**: PostgreSQL database (port 5432)
+- **nginx**: Reverse proxy (optional, ports 80/443)
 
-## 📝 License
+### Commands
+```bash
+# Build and start all services
+docker-compose up -d
 
-This project is proprietary software developed for TempoVoice.
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Rebuild services
+docker-compose build --no-cache
+```
+
+## 🧪 Testing
+
+### Dashboard Testing
+```bash
+cd dashboard
+npm run build  # Test production build
+npm run lint   # Run ESLint
+```
+
+### Agent Testing
+```bash
+cd agent-template
+npm start      # Start agent server
+# Test with Twilio webhook
+```
+
+## 📊 Monitoring
+
+### Health Checks
+- Dashboard: `GET /api/health`
+- Database: Built-in PostgreSQL health checks
+- Agent: WebSocket connection monitoring
+
+### Logging
+- Application logs via console
+- Error tracking and debugging
+- Performance monitoring
+
+## 🔒 Security
+
+### Authentication
+- JWT-based authentication
+- Secure token storage
+- Role-based access control
+
+### Data Protection
+- Environment variable configuration
+- Secure database connections
+- Input validation and sanitization
 
 ## 🤝 Contributing
 
-This is a private project. For access and contribution guidelines, please contact the development team.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## 📞 Support
+## 📄 License
 
-For technical support or questions, please contact:
-- Email: support@tempovoice.com
-- Documentation: [Internal Wiki]
-- Issues: [GitHub Issues]
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+### Common Issues
+
+#### Development Server Issues
+- Clear `.next` directory: `rm -rf .next`
+- Reinstall dependencies: `rm -rf node_modules && npm install`
+- Check environment variables
+
+#### Database Issues
+- Run migrations: `npx prisma db push`
+- Reset database: `npx prisma db push --force-reset`
+
+#### Docker Issues
+- Clean containers: `docker-compose down --volumes`
+- Rebuild images: `docker-compose build --no-cache`
+
+### Getting Help
+- Check the logs: `docker-compose logs -f`
+- Review environment configuration
+- Ensure all prerequisites are installed
+
+## 🎯 Roadmap
+
+### Planned Features
+- [ ] Advanced analytics dashboard
+- [ ] Multi-language support
+- [ ] Voice cloning capabilities
+- [ ] Advanced AI model selection
+- [ ] Real-time collaboration
+- [ ] Mobile application
+- [ ] Advanced security features
+
+### Technical Improvements
+- [ ] Performance optimization
+- [ ] Enhanced error handling
+- [ ] Comprehensive testing suite
+- [ ] CI/CD pipeline
+- [ ] Monitoring and alerting
+- [ ] Documentation improvements
 
 ---
 
-**TempoVoice Phase 2** - Multi-tenant Voice AI Agent Management Platform
-Built with ❤️ by the TempoVoice Team
+**Built with ❤️ using Next.js, AWS Bedrock, and Twilio**

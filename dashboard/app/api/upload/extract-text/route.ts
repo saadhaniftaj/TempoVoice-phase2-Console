@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import formidable from 'formidable';
-import fs from 'fs-extra';
-import path from 'path';
 import mammoth from 'mammoth';
 
 // Dynamic import for pdf-parse to avoid server-side issues
@@ -10,7 +7,7 @@ const getPdfParser = async () => {
     // Use dynamic import with proper handling
     const pdfParseModule = await import('pdf-parse');
     // Handle both default and named exports
-    return pdfParseModule.default || pdfParseModule;
+    return (pdfParseModule as { default?: unknown }).default || pdfParseModule;
   } catch (error) {
     console.error('Failed to import pdf-parse:', error);
     throw new Error('PDF parsing library not available');

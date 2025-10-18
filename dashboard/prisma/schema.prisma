@@ -1,4 +1,4 @@
-// Prisma schema for Tempo Voice Dashboard (local dev)
+// Prisma schema for Tempo Voice Dashboard
 
 generator client {
   provider = "prisma-client-js"
@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -44,6 +44,7 @@ model Agent {
   summaryPhoneNumber    String
   twilioAccountSid      String
   twilioApiSecret       String
+  twilioApiSid          String @default("")
   webhookEndpoint       String?
   
   // Relations
@@ -51,6 +52,19 @@ model Agent {
   createdByUser         User?     @relation("CreatedBy", fields: [createdBy], references: [id])
   calls                 Call[]
   phoneNumbers          PhoneNumber[]
+  folderId              String?
+  folder                Folder?   @relation(fields: [folderId], references: [id])
+}
+
+model Folder {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  agents      Agent[]
 }
 
 model Call {

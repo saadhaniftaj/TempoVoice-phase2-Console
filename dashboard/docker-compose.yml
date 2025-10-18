@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tempo-dashboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tempo_dashboard
+      POSTGRES_USER: tempo_user
+      POSTGRES_PASSWORD: tempo_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tempo_user -d tempo_dashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Dashboard Application
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tempo-dashboard-app
+    restart: unless-stopped
+    environment:
+      # Database
+      DATABASE_URL: "postgresql://tempo_user:tempo_password@postgres:5432/tempo_dashboard?schema=public"
+      
+      # Next.js
+      NODE_ENV: production
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      
+      # JWT
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      
+      # AWS (optional - for production)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      
+      # Twilio (optional - for production)
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_API_SECRET: ${TWILIO_API_SECRET}
+      TWILIO_API_SID: ${TWILIO_API_SID}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: tempo-dashboard-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - dashboard
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: tempo-dashboard-network
