@@ -117,7 +117,7 @@ async function handleDeploy(event) {
       containerName: 'agent',
       containerPort: 3000,
     }]
-  }).catch(async (e) => {
+  })).catch(async (e) => {
     // if service exists, scale up and update task def
     if (String(e?.name).includes('ServiceAlreadyExists')) {
       await ecs.send(new UpdateServiceCommand({
