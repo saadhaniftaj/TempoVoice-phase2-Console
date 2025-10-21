@@ -19,7 +19,7 @@
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.906.0",
     "@aws-sdk/client-sts": "^3.907.0",
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "^6.17.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -48,7 +48,6 @@
     "nodemailer": "^7.0.6",
     "pdf-parse": "^2.4.3",
     "pg": "^8.11.3",
-    "prisma": "^6.16.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.63.0",
@@ -59,7 +58,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.15",
     "@types/fs-extra": "^11.0.4",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
@@ -68,6 +67,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "prisma": "^6.17.1",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"

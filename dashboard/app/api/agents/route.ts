@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         twilioApiSid: twilioApiSid || '',
         voiceId,
         webhookEndpoint,
-        folderId: folderId || null,
+        // folderId: folderId || null,  // Removed - column doesn't exist
         // required json column
         config: {} as Prisma.JsonObject,
         tenantId: user.tenantId || 'default',
