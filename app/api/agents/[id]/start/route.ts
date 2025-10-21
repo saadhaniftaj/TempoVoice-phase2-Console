@@ -62,6 +62,7 @@ export async function POST(
         transferPhoneNumber: agent.transferPhoneNumber,
         summaryPhoneNumber: agent.summaryPhoneNumber,
         twilioAccountSid: agent.twilioAccountSid,
+        twilioApiSid: agent.twilioApiSid,
         twilioApiSecret: agent.twilioApiSecret,
         voiceId: agent.voiceId,
       }

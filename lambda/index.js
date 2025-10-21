@@ -51,6 +51,7 @@ async function handleDeploy(event) {
         portMappings: [{ containerPort: 3000 }],
         environment: [
           { name: 'AGENT_ID', value: agentId },
+          { name: 'AGENT_NAME', value: String(config?.name || '') },
           { name: 'AGENT_PROMPT', value: String(config?.prompt || '') },
           { name: 'AGENT_GUARDRAILS', value: JSON.stringify(config?.guardrails || []) },
           { name: 'AGENT_KNOWLEDGE_BASE', value: String(config?.knowledgeBase || '') },
@@ -58,8 +59,13 @@ async function handleDeploy(event) {
           { name: 'TRANSFER_PHONE_NUMBER', value: String(config?.transferPhoneNumber || '') },
           { name: 'SUMMARY_PHONE_NUMBER', value: String(config?.summaryPhoneNumber || '') },
           { name: 'TWILIO_ACCOUNT_SID', value: String(config?.twilioAccountSid || '') },
+          { name: 'TWILIO_API_SID', value: String(config?.twilioApiSid || '') },
           { name: 'TWILIO_API_SECRET', value: String(config?.twilioApiSecret || '') },
-          { name: 'VOICE_ID', value: String(config?.voiceId || '') },
+          { name: 'VOICE_ID', value: String(config?.voiceId || 'tiffany') },
+          { name: 'AWS_REGION', value: process.env.AWS_REGION || 'us-east-1' },
+          { name: 'AWS_PROFILE', value: 'bedrock-test' },
+          { name: 'NODE_ENV', value: 'production' },
+          { name: 'PORT', value: '3000' },
         ],
       }
     ]
