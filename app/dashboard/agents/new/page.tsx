@@ -105,7 +105,9 @@ export default function NewAgentPage() {
       twilioApiSid: formData.twilioApiSid
     };
     
-    return Object.values(requiredFields).every(value => value.trim() !== '');
+    const isValid = Object.values(requiredFields).every(value => value.trim() !== '');
+    console.log('Form validation:', { requiredFields, isValid });
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
