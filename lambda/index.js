@@ -1,8 +1,16 @@
 const { ECSClient, RegisterTaskDefinitionCommand, CreateServiceCommand, UpdateServiceCommand, DescribeServicesCommand, DeleteServiceCommand } = require('@aws-sdk/client-ecs');
 const { ElasticLoadBalancingV2Client, CreateTargetGroupCommand, RegisterTargetsCommand, CreateRuleCommand, DeleteRuleCommand, DescribeListenersCommand } = require('@aws-sdk/client-elastic-load-balancing-v2');
 
-// Expected env vars
-// CLUSTER_ARN, EXECUTION_ROLE_ARN, TASK_ROLE_ARN, CONTAINER_IMAGE, SUBNET_IDS (csv), SECURITY_GROUP_IDS (csv), LISTENER_ARN, VPC_ID
+// Expected env vars - Set these in Lambda environment
+// CLUSTER_ARN=arn:aws:ecs:us-east-1:048058682153:cluster/shttempo-cluster
+// EXECUTION_ROLE_ARN=arn:aws:iam::048058682153:role/ecsTaskExecutionRole
+// TASK_ROLE_ARN=arn:aws:iam::048058682153:role/ecsTaskRole
+// CONTAINER_IMAGE=048058682153.dkr.ecr.us-east-1.amazonaws.com/shttempo-agent:latest
+// SUBNET_IDS=subnet-0cae743d3717eeca8,subnet-0011feccfe0fa9e10
+// SECURITY_GROUP_IDS=sg-0c7791200458e37e4
+// LISTENER_ARN=arn:aws:elasticloadbalancing:us-east-1:048058682153:listener/app/shttempo-alb/f4052973848dbda8/b526bf6bd01326c4
+// VPC_ID=vpc-0e1a887716a93e12b
+// ALB_BASE_URL=http://shttempo-alb-1077361768.us-east-1.elb.amazonaws.com
 
 exports.handler = async (event) => {
   const action = event?.action;
