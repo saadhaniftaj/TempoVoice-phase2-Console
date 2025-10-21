@@ -1,4 +1,4 @@
-// Prisma schema for Tempo Voice Dashboard - Railway PostgreSQL v2
+// Prisma schema for Tempo Voice Dashboard - Railway PostgreSQL v3
 
 generator client {
   provider = "prisma-client-js"
