@@ -4,6 +4,60 @@ import { AuthService } from '../../../../src/lib/auth';
 
 const prisma = new PrismaClient();
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Verify authentication
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const token = authHeader.substring(7);
+    const authService = new AuthService();
+    const user = authService.verifyToken(token);
+    if (!user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: agentId } = await params;
+
+    // Fetch the agent with folder information
+    const agent = await prisma.agent.findFirst({
+      where: {
+        id: agentId,
+        tenantId: user.tenantId
+      },
+      include: {
+        folder: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
+    });
+
+    if (!agent) {
+      return NextResponse.json(
+        { message: 'Agent not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(agent);
+
+  } catch (error) {
+    console.error('Error fetching agent:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
