@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 export async function GET() {
+  return await testLambda({ action: 'test' });
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    return await testLambda(body);
+  } catch (error) {
+    return NextResponse.json({
+      status: 'error',
+      message: 'Invalid JSON payload',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 400 });
+  }
+}
+
+async function testLambda(payload: any) {
   try {
     // Check if AWS credentials are configured
     const hasAwsCredentials = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
@@ -30,8 +47,8 @@ export async function GET() {
       }
     });
 
-    // Test Lambda invocation with a simple payload
-    const testPayload = {
+    // Use the provided payload or default test payload
+    const testPayload = payload || {
       action: 'test',
       message: 'Hello from Railway Dashboard'
     };
