@@ -46,7 +46,7 @@ async function handleDeploy(event) {
     containerDefinitions: [
       {
         name: 'agent',
-        image: process.env.CONTAINER_IMAGE,
+        image: process.env.CONTAINER_IMAGE || '048058682153.dkr.ecr.us-east-1.amazonaws.com/shttempo-agent:latest',
         essential: true,
         portMappings: [{ containerPort: 3000 }],
         environment: [
