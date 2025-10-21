@@ -52,7 +52,7 @@ async function handleDeploy(event) {
         environment: [
           { name: 'AGENT_ID', value: agentId },
           { name: 'AGENT_NAME', value: String(config?.name || 'Nova Agent') },
-          { name: 'AGENT_SYSTEM_PROMPT', value: String(config?.prompt || 'You are a helpful AI assistant.') },
+          { name: 'AGENT_SYSTEM_PROMPT', value: sanitizeSystemPrompt(config) },
           { name: 'AWS_ACCESS_KEY_ID', value: process.env.AWS_ACCESS_KEY_ID || '' },
           { name: 'AWS_REGION', value: process.env.AWS_REGION || 'us-east-1' },
           { name: 'AWS_SECRET_ACCESS_KEY', value: process.env.AWS_SECRET_ACCESS_KEY || '' },
@@ -169,4 +169,59 @@ function hashToPriority(id) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i);
   return Math.abs(h % 40000) + 1;
+}
+
+function sanitizeSystemPrompt(config) {
+  try {
+    // Combine prompt, knowledge base, and guardrails into one system prompt
+    let combinedPrompt = '';
+    
+    // Add base prompt
+    if (config?.prompt) {
+      combinedPrompt += config.prompt + '\n\n';
+    }
+    
+    // Add knowledge base
+    if (config?.knowledgeBase) {
+      combinedPrompt += 'KNOWLEDGE BASE:\n' + config.knowledgeBase + '\n\n';
+    }
+    
+    // Add guardrails
+    if (config?.guardrails) {
+      let guardrailsText = '';
+      if (typeof config.guardrails === 'string') {
+        guardrailsText = config.guardrails;
+      } else if (Array.isArray(config.guardrails)) {
+        guardrailsText = config.guardrails.join('\n');
+      } else if (typeof config.guardrails === 'object') {
+        guardrailsText = JSON.stringify(config.guardrails, null, 2);
+      }
+      
+      if (guardrailsText) {
+        combinedPrompt += 'GUARDRAILS:\n' + guardrailsText + '\n\n';
+      }
+    }
+    
+    // Sanitize the prompt: remove problematic characters that could break environment variables
+    let sanitized = combinedPrompt
+      .replace(/"/g, '')           // Remove double quotes
+      .replace(/'/g, '')           // Remove single quotes
+      .replace(/`/g, '')           // Remove backticks
+      .replace(/\$/g, '')           // Remove dollar signs
+      .replace(/\\/g, '')           // Remove backslashes
+      .replace(/\n\s*\n/g, '\n')    // Remove empty lines
+      .trim();
+    
+    // Ensure it's not empty
+    if (!sanitized) {
+      sanitized = 'You are a helpful AI assistant.';
+    }
+    
+    console.log('System prompt sanitized successfully, length:', sanitized.length);
+    return sanitized;
+    
+  } catch (error) {
+    console.error('Error sanitizing system prompt:', error);
+    return 'You are a helpful AI assistant.';
+  }
 }
