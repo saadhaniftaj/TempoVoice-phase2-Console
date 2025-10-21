@@ -338,7 +338,6 @@ export default function NewAgentPage() {
                   value={formData.voiceId}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 >
                   <option value="">Select a voice</option>
                   <optgroup label="English (US)">
@@ -421,7 +420,6 @@ export default function NewAgentPage() {
                   value={formData.callPhoneNumber}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 >
                   <option value="">Select a phone number</option>
                   {availableNumbers.map((number) => (
@@ -487,7 +485,6 @@ export default function NewAgentPage() {
                   value={formData.twilioAccountSid}
                   onChange={handleInputChange}
                   placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  required
                 />
               </div>
               
@@ -502,7 +499,6 @@ export default function NewAgentPage() {
                   value={formData.twilioApiSecret}
                   onChange={handleInputChange}
                   placeholder="Enter Twilio API secret"
-                  required
                 />
               </div>
               
@@ -516,7 +512,6 @@ export default function NewAgentPage() {
                   value={formData.twilioApiSid}
                   onChange={handleInputChange}
                   placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  required
                 />
               </div>
             </CardContent>
