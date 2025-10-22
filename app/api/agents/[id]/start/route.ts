@@ -78,12 +78,15 @@ export async function POST(
     const responseString = result.Payload ? Buffer.from(result.Payload).toString('utf-8') : '{}';
     const responseJson = JSON.parse(responseString || '{}') as { serviceUrl?: string; webhookUrl?: string; error?: string };
 
+    console.log('Lambda response:', { responseString, responseJson, statusCode: result.StatusCode });
+
     if (responseJson.error) {
       await prisma.agent.update({ where: { id: agentId }, data: { status: AgentStatus.ERROR } });
       return NextResponse.json({ message: 'Deployment failed', error: responseJson.error }, { status: 500 });
     }
 
     const serviceUrl = responseJson.webhookUrl || responseJson.serviceUrl;
+    console.log('Extracted serviceUrl:', serviceUrl);
 
     // Persist webhook endpoint and activate agent
     await prisma.agent.update({
