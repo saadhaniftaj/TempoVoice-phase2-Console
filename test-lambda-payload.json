@@ -1,0 +1,21 @@
+{
+  "action": "deploy",
+  "agentId": "test-manual-deploy-123",
+  "config": {
+    "name": "Manual Test Agent",
+    "prompt": "You are a helpful AI assistant for testing purposes. Respond professionally and assist users with their inquiries.",
+    "guardrails": [
+      "Always be polite and professional",
+      "Do not provide harmful or inappropriate content",
+      "If you don't know something, say so"
+    ],
+    "knowledgeBase": "This is a test knowledge base for manual Lambda invocation testing. The agent should use this information to help users.",
+    "callPhoneNumber": "+1234567890",
+    "transferPhoneNumber": "+1987654321",
+    "summaryPhoneNumber": "+1122334455",
+    "twilioAccountSid": "ACtest123456789012345678901234567890",
+    "twilioApiSid": "SKtest123456789012345678901234567890",
+    "twilioApiSecret": "test_twilio_api_secret_key",
+    "voiceId": "tiffany"
+  }
+}

@@ -1,5 +1,5 @@
 const { ECSClient, RegisterTaskDefinitionCommand, CreateServiceCommand, UpdateServiceCommand, DescribeServicesCommand, DeleteServiceCommand } = require('@aws-sdk/client-ecs');
-const { ElasticLoadBalancingV2Client, CreateTargetGroupCommand, RegisterTargetsCommand, CreateRuleCommand, DeleteRuleCommand, DescribeListenersCommand } = require('@aws-sdk/client-elastic-load-balancing-v2');
+const { ElasticLoadBalancingV2Client, CreateTargetGroupCommand, RegisterTargetsCommand, CreateRuleCommand, DeleteRuleCommand, DescribeListenersCommand, DescribeTargetGroupsCommand, DescribeRulesCommand } = require('@aws-sdk/client-elastic-load-balancing-v2');
 
 // Expected env vars - Set these in Lambda environment
 // CLUSTER_ARN=arn:aws:ecs:us-east-1:048058682153:cluster/shttempo-cluster
@@ -84,74 +84,192 @@ async function handleDeploy(event) {
 
   const taskDefinitionArn = taskDef.taskDefinition.taskDefinitionArn;
 
-  // 2) Target group
+  // 2) Target group (create or reuse existing)
   const tgName = `tg-${agentId}`.slice(0, 32);
-  const tg = await elbv2.send(new CreateTargetGroupCommand({
-    Name: tgName,
-    Protocol: 'HTTP',
-    Port: 3000,
-    VpcId: vpcId,
-    TargetType: 'ip',
-    HealthCheckProtocol: 'HTTP',
-    HealthCheckPath: '/health',
-  }));
-  const targetGroupArn = tg.TargetGroups[0].TargetGroupArn;
+  let targetGroupArn;
+  
+  try {
+    // Check if target group already exists
+    let existingTgs;
+    try {
+      existingTgs = await elbv2.send(new DescribeTargetGroupsCommand({
+        Names: [tgName]
+      }));
+    } catch (error) {
+      // Target group doesn't exist, which is fine
+      existingTgs = { TargetGroups: [] };
+    }
+    
+    if (existingTgs.TargetGroups && existingTgs.TargetGroups.length > 0) {
+      targetGroupArn = existingTgs.TargetGroups[0].TargetGroupArn;
+      console.log(`Reusing existing target group: ${targetGroupArn}`);
+    } else {
+      // Create new target group
+      const tg = await elbv2.send(new CreateTargetGroupCommand({
+        Name: tgName,
+        Protocol: 'HTTP',
+        Port: 3000,
+        VpcId: vpcId,
+        TargetType: 'ip',
+        HealthCheckProtocol: 'HTTP',
+        HealthCheckPath: '/',
+        HealthCheckIntervalSeconds: 30,
+        HealthCheckTimeoutSeconds: 5,
+        HealthyThresholdCount: 2,
+        UnhealthyThresholdCount: 3,
+      }));
+      targetGroupArn = tg.TargetGroups[0].TargetGroupArn;
+      console.log(`Created new target group: ${targetGroupArn}`);
+    }
+  } catch (error) {
+    console.error('Error handling target group:', error);
+    throw error;
+  }
 
-  // 3) Service (create or update desiredCount=1)
+  // 3) Add ALB rules for both agent-specific path and incoming-call path
+  const listener = listenerArn;
+  const agentPath = `/agents/${agentId}/*`;
+  const incomingCallPath = `/incoming-call`;
+  let prio = Math.min(40000, Math.max(1, hashToPriority(agentId)));
+  
+  console.log(`Creating ALB rules for paths: ${agentPath} and ${incomingCallPath}, initial priority: ${prio}`);
+  
+  let agentRule, incomingCallRule;
+  try {
+    // Check for existing rules with the same path pattern
+    const existingRules = await elbv2.send(new DescribeRulesCommand({
+      ListenerArn: listener
+    }));
+    
+    // Find available priority (avoid conflicts)
+    const usedPriorities = existingRules.Rules
+      .filter(r => r.Priority !== 'default')
+      .map(r => parseInt(r.Priority))
+      .filter(p => !isNaN(p));
+    
+    while (usedPriorities.includes(prio)) {
+      prio = Math.max(1, prio - 1);
+    }
+    
+    console.log(`Using priority: ${prio} for agent ALB rule`);
+    
+    // Create rule for agent-specific path
+    agentRule = await elbv2.send(new CreateRuleCommand({
+      ListenerArn: listener,
+      Priority: prio,
+      Conditions: [{
+        Field: 'path-pattern',
+        PathPatternConfig: { Values: [agentPath] }
+      }],
+      Actions: [{
+        Type: 'forward',
+        TargetGroupArn: targetGroupArn,
+      }]
+    }));
+    console.log(`Agent ALB rule created successfully: ${agentRule.Rules?.[0]?.RuleArn}`);
+    
+    // Check if incoming-call rule already exists
+    const existingIncomingCallRule = existingRules.Rules.find(r => 
+      r.Conditions.some(c => 
+        c.Field === 'path-pattern' && 
+        c.Values.includes('/incoming-call')
+      )
+    );
+    
+    if (!existingIncomingCallRule) {
+      // Create rule for incoming-call path
+      const incomingCallPrio = Math.max(1, prio - 1);
+      console.log(`Creating incoming-call ALB rule with priority: ${incomingCallPrio}`);
+      
+      incomingCallRule = await elbv2.send(new CreateRuleCommand({
+        ListenerArn: listener,
+        Priority: incomingCallPrio,
+        Conditions: [{
+          Field: 'path-pattern',
+          PathPatternConfig: { Values: ['/incoming-call'] }
+        }],
+        Actions: [{
+          Type: 'forward',
+          TargetGroupArn: targetGroupArn,
+        }]
+      }));
+      console.log(`Incoming-call ALB rule created successfully: ${incomingCallRule.Rules?.[0]?.RuleArn}`);
+    } else {
+      console.log(`Incoming-call ALB rule already exists: ${existingIncomingCallRule.RuleArn}`);
+      incomingCallRule = { Rules: [{ RuleArn: existingIncomingCallRule.RuleArn }] };
+    }
+    
+  } catch (error) {
+    console.error('Failed to create ALB rules:', error);
+    throw error;
+  }
+
+  // 4) Service (create or update desiredCount=1)
   const serviceName = `svc-${agentId}`.slice(0, 32);
-  await ecs.send(new CreateServiceCommand({
-    cluster,
-    serviceName,
-    taskDefinition: taskDefinitionArn,
-    desiredCount: 1,
-    launchType: 'FARGATE',
-    networkConfiguration: {
-      awsvpcConfiguration: {
-        subnets,
-        securityGroups,
-        assignPublicIp: 'ENABLED',
-      }
-    },
-    loadBalancers: [{
-      targetGroupArn,
-      containerName: 'agent',
-      containerPort: 3000,
-    }]
-  })).catch(async (e) => {
-    // if service exists, scale up and update task def
-    if (String(e?.name).includes('ServiceAlreadyExists')) {
+  
+  try {
+    // Check if service already exists
+    const existingServices = await ecs.send(new DescribeServicesCommand({
+      cluster,
+      services: [serviceName]
+    }));
+    
+    if (existingServices.services && existingServices.services.length > 0) {
+      // Service exists, update it
+      console.log(`Service ${serviceName} already exists, updating...`);
       await ecs.send(new UpdateServiceCommand({
         cluster,
         service: serviceName,
         desiredCount: 1,
         taskDefinition: taskDefinitionArn,
+        loadBalancers: [{
+          targetGroupArn,
+          containerName: 'agent',
+          containerPort: 3000,
+        }]
       }));
+      console.log(`Service ${serviceName} updated successfully`);
     } else {
-      throw e;
+      // Service doesn't exist, create it
+      console.log(`Creating new service: ${serviceName}`);
+      await ecs.send(new CreateServiceCommand({
+        cluster,
+        serviceName,
+        taskDefinition: taskDefinitionArn,
+        desiredCount: 1,
+        launchType: 'FARGATE',
+        networkConfiguration: {
+          awsvpcConfiguration: {
+            subnets,
+            securityGroups,
+            assignPublicIp: 'ENABLED',
+          }
+        },
+        loadBalancers: [{
+          targetGroupArn,
+          containerName: 'agent',
+          containerPort: 3000,
+        }]
+      }));
+      console.log(`Service ${serviceName} created successfully`);
     }
-  });
+  } catch (error) {
+    console.error('Error handling ECS service:', error);
+    throw error;
+  }
 
-  // 4) Add ALB rule for path /agents/{agentId}
-  const listener = listenerArn;
-  const path = `/agents/${agentId}`;
-  const prio = Math.min(40000, Math.max(1, hashToPriority(agentId)));
-  const rule = await elbv2.send(new CreateRuleCommand({
-    ListenerArn: listener,
-    Priority: prio,
-    Conditions: [{
-      Field: 'path-pattern',
-      PathPatternConfig: { Values: [path] }
-    }],
-    Actions: [{
-      Type: 'forward',
-      TargetGroupArn: targetGroupArn,
-    }]
-  }));
-
-  const serviceUrl = `${process.env.ALB_BASE_URL || ''}${path}`;
+  const serviceUrl = `${process.env.ALB_BASE_URL || ''}/incoming-call`;
+  const agentUrl = `${process.env.ALB_BASE_URL || ''}${agentPath}`;
   return {
     statusCode: 200,
-    body: JSON.stringify({ serviceUrl, ruleArn: rule.Rules?.[0]?.RuleArn, targetGroupArn })
+    body: JSON.stringify({ 
+      serviceUrl, 
+      webhookUrl: serviceUrl,
+      agentUrl,
+      agentRuleArn: agentRule.Rules?.[0]?.RuleArn,
+      incomingCallRuleArn: incomingCallRule.Rules?.[0]?.RuleArn,
+      targetGroupArn 
+    })
   };
 }
 
@@ -162,14 +280,66 @@ async function handleStop(event) {
 
   const cluster = process.env.CLUSTER_ARN;
   const serviceName = `svc-${agentId}`.slice(0, 32);
+  const tgName = `tg-${agentId}`.slice(0, 32);
+  const listenerArn = process.env.LISTENER_ARN;
+  const path = `/agents/${agentId}/*`;
 
-  // Scale service down to 0
-  await ecs.send(new UpdateServiceCommand({ cluster, service: serviceName, desiredCount: 0 }).catch(() => {}));
+  try {
+    // Scale service down to 0
+    try {
+      await ecs.send(new UpdateServiceCommand({ 
+        cluster, 
+        service: serviceName, 
+        desiredCount: 0 
+      }));
+      console.log(`Scaled down service: ${serviceName}`);
+    } catch (error) {
+      console.log(`Service ${serviceName} not found or already stopped`);
+    }
 
-  // Optionally delete service (ignore errors if not found)
-  await ecs.send(new DeleteServiceCommand({ cluster, service: serviceName, force: true }).catch(() => {}));
+    // Delete service
+    try {
+      await ecs.send(new DeleteServiceCommand({ 
+        cluster, 
+        service: serviceName, 
+        force: true 
+      }));
+      console.log(`Deleted service: ${serviceName}`);
+    } catch (error) {
+      console.log(`Service ${serviceName} not found or already deleted`);
+    }
 
-  // Caller may manage ALB rules/target groups lifecycle; keep simple here.
+    // Delete ALB rule
+    try {
+      const existingRules = await elbv2.send(new DescribeRulesCommand({
+        ListenerArn: listenerArn
+      }));
+      
+      const ruleToDelete = existingRules.Rules.find(rule => 
+        rule.Conditions.some(condition => 
+          condition.Field === 'path-pattern' && 
+          condition.Values.includes(path)
+        )
+      );
+      
+      if (ruleToDelete) {
+        await elbv2.send(new DeleteRuleCommand({
+          RuleArn: ruleToDelete.RuleArn
+        }));
+        console.log(`Deleted ALB rule: ${ruleToDelete.RuleArn}`);
+      }
+    } catch (error) {
+      console.log(`ALB rule for ${path} not found or already deleted`);
+    }
+
+    // Note: Target groups are kept for potential reuse
+    console.log(`Stop operation completed for agent: ${agentId}`);
+
+  } catch (error) {
+    console.error('Error in stop operation:', error);
+    throw error;
+  }
+
   return { statusCode: 200, body: JSON.stringify({ ok: true }) };
 }
 

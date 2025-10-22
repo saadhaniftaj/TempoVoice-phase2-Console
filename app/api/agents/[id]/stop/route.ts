@@ -42,7 +42,7 @@ export async function POST(
 
     // Invoke stop on deployment Lambda
     const lambda = new LambdaClient({ region: process.env.AWS_REGION || 'us-east-1' });
-    const functionName = process.env.DEPLOY_AGENT_LAMBDA || 'DeployTempoVoiceAgent';
+    const functionName = process.env.DEPLOY_AGENT_LAMBDA || 'shttempo-deploy-agent';
     const payload = { action: 'stop', agentId };
     const invoke = new InvokeCommand({
       FunctionName: functionName,

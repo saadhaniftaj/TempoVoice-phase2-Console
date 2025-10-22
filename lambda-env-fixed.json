@@ -1,0 +1,13 @@
+{
+  "Variables": {
+    "SUBNET_IDS": "subnet-04de6a6b14cfa3c3c,subnet-03312c993338dc3b9",
+    "SECURITY_GROUP_IDS": "sg-067166e0f44a29a22",
+    "TASK_ROLE_ARN": "arn:aws:iam::048058682153:role/shttempo-ecs-task-role",
+    "CLUSTER_ARN": "arn:aws:ecs:us-east-1:048058682153:cluster/shttempo-cluster",
+    "EXECUTION_ROLE_ARN": "arn:aws:iam::048058682153:role/shttempo-ecs-exec-role",
+    "CONTAINER_IMAGE": "048058682153.dkr.ecr.us-east-1.amazonaws.com/shttempo-agent:latest",
+    "VPC_ID": "vpc-01465e751d88394ef",
+    "ALB_BASE_URL": "http://shttempo-alb-1077361768.us-east-1.elb.amazonaws.com",
+    "LISTENER_ARN": "arn:aws:elasticloadbalancing:us-east-1:048058682153:listener/app/shttempo-alb/f4052973848dbda8/b526bf6bd01326c4"
+  }
+}

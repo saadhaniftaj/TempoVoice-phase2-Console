@@ -1,0 +1,1 @@
+{"action":"deploy","agentId":"test123","config":{"name":"Test Agent","prompt":"Test prompt","callPhoneNumber":"+1234567890","twilioAccountSid":"ACtest","twilioApiSid":"SKtest","twilioApiSecret":"secret","voiceId":"tiffany"}}
