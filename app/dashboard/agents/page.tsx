@@ -473,7 +473,7 @@ export default function AgentsPage() {
                                       <Pause className="w-3 h-3 mr-1" />
                                       Stop
                                     </Button>
-                                  ) : fullAgent.status === 'ERROR' || fullAgent.status === 'DRAFT' ? (
+                                  ) : fullAgent.status === 'ERROR' || fullAgent.status === 'DRAFT' || fullAgent.status === 'PENDING' ? (
                                     <Button
                                       size="sm"
                                       variant="outline"
@@ -583,7 +583,7 @@ export default function AgentsPage() {
                                         <Pause className="w-3 h-3 mr-1" />
                                         Stop
                                       </Button>
-                                    ) : agent.status === 'ERROR' || agent.status === 'DRAFT' ? (
+                                    ) : agent.status === 'ERROR' || agent.status === 'DRAFT' || agent.status === 'PENDING' ? (
                                       <Button
                                         size="sm"
                                         variant="outline"
@@ -711,7 +711,7 @@ export default function AgentsPage() {
                           <Pause className="w-3 h-3 mr-1" />
                           Stop
                         </Button>
-                      ) : agent.status === 'ERROR' || agent.status === 'DRAFT' ? (
+                      ) : agent.status === 'ERROR' || agent.status === 'DRAFT' || agent.status === 'PENDING' ? (
                         <Button
                           size="sm"
                           variant="outline"
