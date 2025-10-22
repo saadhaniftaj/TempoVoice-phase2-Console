@@ -76,9 +76,14 @@ export async function POST(
 
     const result = await lambda.send(invoke);
     const responseString = result.Payload ? Buffer.from(result.Payload).toString('utf-8') : '{}';
-    const responseJson = JSON.parse(responseString || '{}') as { serviceUrl?: string; webhookUrl?: string; error?: string };
-
-    console.log('Lambda response:', { responseString, responseJson, statusCode: result.StatusCode });
+    
+    console.log('Raw Lambda response:', { responseString, statusCode: result.StatusCode });
+    
+    // Parse the Lambda response - it returns { statusCode: 200, body: "..." }
+    const lambdaResponse = JSON.parse(responseString || '{}');
+    const responseJson = lambdaResponse.body ? JSON.parse(lambdaResponse.body) : lambdaResponse;
+    
+    console.log('Parsed Lambda response:', responseJson);
 
     if (responseJson.error) {
       await prisma.agent.update({ where: { id: agentId }, data: { status: AgentStatus.ERROR } });
