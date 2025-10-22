@@ -1,5 +1,5 @@
 const { ECSClient, RegisterTaskDefinitionCommand, CreateServiceCommand, UpdateServiceCommand, DescribeServicesCommand, DeleteServiceCommand } = require('@aws-sdk/client-ecs');
-const { ElasticLoadBalancingV2Client, CreateTargetGroupCommand, RegisterTargetsCommand, CreateRuleCommand, DeleteRuleCommand, DescribeListenersCommand, DescribeTargetGroupsCommand, DescribeRulesCommand } = require('@aws-sdk/client-elastic-load-balancing-v2');
+const { ElasticLoadBalancingV2Client, CreateTargetGroupCommand, RegisterTargetsCommand, CreateRuleCommand, DeleteRuleCommand, DescribeListenersCommand, DescribeTargetGroupsCommand, DescribeRulesCommand, ModifyRuleCommand } = require('@aws-sdk/client-elastic-load-balancing-v2');
 
 // Expected env vars - Set these in Lambda environment
 // CLUSTER_ARN=arn:aws:ecs:us-east-1:048058682153:cluster/shttempo-cluster
@@ -168,6 +168,10 @@ async function handleDeploy(event) {
     }));
     console.log(`Agent ALB rule created successfully: ${agentRule.Rules?.[0]?.RuleArn}`);
     
+    // Always create a new incoming-call rule for this agent (or update existing one)
+    const incomingCallPrio = Math.max(1, prio - 1);
+    console.log(`Creating/updating incoming-call ALB rule with priority: ${incomingCallPrio}`);
+    
     // Check if incoming-call rule already exists
     const existingIncomingCallRule = existingRules.Rules.find(r => 
       r.Conditions.some(c => 
@@ -176,11 +180,20 @@ async function handleDeploy(event) {
       )
     );
     
-    if (!existingIncomingCallRule) {
-      // Create rule for incoming-call path
-      const incomingCallPrio = Math.max(1, prio - 1);
-      console.log(`Creating incoming-call ALB rule with priority: ${incomingCallPrio}`);
-      
+    if (existingIncomingCallRule) {
+      // Update existing rule to point to new target group
+      console.log(`Updating existing incoming-call rule: ${existingIncomingCallRule.RuleArn}`);
+      await elbv2.send(new ModifyRuleCommand({
+        RuleArn: existingIncomingCallRule.RuleArn,
+        Actions: [{
+          Type: 'forward',
+          TargetGroupArn: targetGroupArn,
+        }]
+      }));
+      incomingCallRule = { Rules: [{ RuleArn: existingIncomingCallRule.RuleArn }] };
+      console.log(`Incoming-call ALB rule updated successfully`);
+    } else {
+      // Create new rule for incoming-call path
       incomingCallRule = await elbv2.send(new CreateRuleCommand({
         ListenerArn: listener,
         Priority: incomingCallPrio,
@@ -194,9 +207,6 @@ async function handleDeploy(event) {
         }]
       }));
       console.log(`Incoming-call ALB rule created successfully: ${incomingCallRule.Rules?.[0]?.RuleArn}`);
-    } else {
-      console.log(`Incoming-call ALB rule already exists: ${existingIncomingCallRule.RuleArn}`);
-      incomingCallRule = { Rules: [{ RuleArn: existingIncomingCallRule.RuleArn }] };
     }
     
   } catch (error) {

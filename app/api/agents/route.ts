@@ -45,6 +45,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    console.log('Agents API response:', agents.map(a => ({ id: a.id, name: a.name, status: a.status, webhookEndpoint: a.webhookEndpoint })));
+
     return NextResponse.json({ agents });
 
   } catch (error) {
